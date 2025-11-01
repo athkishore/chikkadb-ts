@@ -174,6 +174,34 @@ function readNullTerminatedString(buf: Buffer, offset: number): { s: string, len
   };
 }
 
+type ReadBSONResult = {
+  docs: Record<string, any>[];
+  remaining: Buffer | null;
+}
+function readBSONDocuments(buf: Buffer, offset: number): ReadBSONResult {
+  let docs: Record<string, any>[] = [];
+  let pointer = offset;
+
+  while (pointer < buf.length) {
+    if (buf.length - pointer < 4) break;
+    const size = buf.readInt32LE(pointer);
+    if (buf.length - pointer < size) break;
+    const docBuf = buf.subarray(pointer, pointer + size);
+    try {
+      const doc = BSON.deserialize(docBuf);
+      docs.push(doc);
+    } catch {
+      throw new Error('Invalid BSON at offset ' + pointer);
+    }
+    pointer += size;
+  }
+
+  return {
+    docs,
+    remaining: buf.subarray(pointer),
+  }
+}
+
 function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | null /* Handle error */ {
   let offset = 0;
   
@@ -190,8 +218,9 @@ function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | null /* Ha
   const numberToReturn = payload.readInt32LE(offset);
   offset += 4;
 
-  const query = BSON.deserialize(payload.subarray(offset));
-  // handle returnFieldsSelector;
+  const { docs: [query, returnFieldsSelector] } = readBSONDocuments(payload.subarray(offset), 0);
+  
+  if (!query) return null;
 
   return {
     flags,
@@ -201,6 +230,42 @@ function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | null /* Ha
     query,
   };
 
+}
+
+type ParsedOpReplyPayload = {
+  responseFlags: number;
+  cursorID: BigInt;
+  startingFrom: number;
+  numberReturned: number;
+  documents: Record<string, any>[];
+}
+
+function parseOpReplyPayload(payload: Buffer): ParsedOpReplyPayload | null /*Handle error*/ {
+  let offset = 0;
+  if (payload.length - offset < 4) return null;
+  const responseFlags = payload.readInt32LE(offset);
+  offset += 4;
+
+  if (payload.length - offset < 8) return null;
+  const cursorID = payload.readBigInt64LE(offset);
+  offset += 8;
+
+  if (payload.length - offset < 4) return null;
+  const startingFrom = payload.readInt32LE(offset);
+  offset += 4;
+
+  if (payload.length - offset < 4) return null;
+  const numberReturned = payload.readInt32LE(offset);
+  offset += 4;
+
+  const { docs: documents } = readBSONDocuments(payload, offset);
+  return {
+    responseFlags,
+    cursorID,
+    startingFrom,
+    numberReturned,
+    documents
+  };
 }
 
 const server = net.createServer((clientSock: Socket) => {
@@ -229,24 +294,18 @@ const server = net.createServer((clientSock: Socket) => {
       log('C->S message', { from: clientRemote, messageLength, requestID, responseTo, opCode });
       prettyPrintHex(chunk);
       try {
-        // const { docs, raw } = extractBsonDocs(payload);
-        // let docs = parseOpMsg(payload);
-        // if (docs.length) {
-        //   log(`  Parsed ${docs.length} BSON doc(s) from client message`);
-        //   docs.forEach((d, i) => log(`    doc[${i}]`, JSON.stringify(d)));
-        // }
-
-        // if (raw.length) {
-        //   raw.forEach((rbuf, i) => 
-        //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
-        //   );
-        // }
-
         switch(opCode) {
-          case 2004:
+          case 2004: {
             const parsedPayload = parseOpQueryPayload(payload);
             console.log(parsedPayload);
             break;
+          }
+
+          case 1: {
+            const parsedPayload = parseOpReplyPayload(payload);
+            console.log(parsedPayload);
+            break;
+          }
         }
       } catch(e: any) {
         log('  BSON parse error (client->server):', e?.message);
@@ -269,22 +328,24 @@ const server = net.createServer((clientSock: Socket) => {
 
       log('S->C message', { to: clientRemote, messageLength, requestID, responseTo, opCode });
       prettyPrintHex(chunk);
-      // try {
-      //   // const { docs, raw } = extractBsonDocs(payload);
-      //   let docs = parseOpMsg(payload);
-      //   if (docs.length) {
-      //     log(`  Parsed ${docs.length} BSON doc(s) from server response`);
-      //     docs.forEach((d, i) => log(`    docs[${i}]`, JSON.stringify(d)));
-      //   }
-      //   // if (raw.length) {
-      //   //   raw.forEach((rbuf, i) =>
-      //   //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
-      //   //   );
-      //   // }
-      // } catch(e: any) {
-      //   log('  BSON parse error (server->client):', e?.message);
-      //   log('  payload hex sample:', prettyHex(payload, 128));
-      // }
+      try {
+        switch(opCode) {
+          case 2004: {
+            const parsedPayload = parseOpQueryPayload(payload);
+            console.log(parsedPayload);
+            break;
+          }
+
+          case 1: {
+            const parsedPayload = parseOpReplyPayload(payload);
+            console.log(parsedPayload);
+            break;
+          }
+        }
+      } catch(e: any) {
+        log('  BSON parse error (server->client):', e?.message);
+        log('  payload hex sample:', payload);
+      }
     });
   });
 
