@@ -1,5 +1,6 @@
 import net, { Socket } from 'node:net';
 import { BSON } from 'bson';
+import assert from 'node:assert';
 
 const LISTEN_HOST = '0.0.0.0';
 const LISTEN_PORT = 27017;
@@ -176,7 +177,7 @@ function readNullTerminatedString(buf: Buffer, offset: number): { s: string, len
 
 type ReadBSONResult = {
   docs: Record<string, any>[];
-  remaining: Buffer | null;
+  remaining: Buffer;
 }
 function readBSONDocuments(buf: Buffer, offset: number): ReadBSONResult {
   let docs: Record<string, any>[] = [];
@@ -268,6 +269,88 @@ function parseOpReplyPayload(payload: Buffer): ParsedOpReplyPayload | null /*Han
   };
 }
 
+type ParsedOpMsgPayload = {
+  flagBits: number;
+  sections: OpMsgPayloadSection[];
+  checksum?: number;
+}
+
+function parseOpMsgPayload(payload: Buffer): ParsedOpMsgPayload | null /*Handle error*/ {
+  let offset = 0;
+  if (payload.length - offset < 4) return null;
+  const flagBits = payload.readInt32LE(offset);
+  offset += 4;
+
+  const sections = readOpMsgPayloadSections(payload, offset);
+  if (!sections) throw new Error('Error');
+
+  return {
+    flagBits,
+    sections,
+  };
+}
+
+type OpMsgPayloadSection = {
+  sectionKind: 0;
+  doc: Record<string, any>;
+} | {
+  sectionKind: 1;
+  size: number;
+  documentSequenceIdentifier: string;
+  docs: Record<string, any>[];
+};
+function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSection[] | null {
+  const sections: OpMsgPayloadSection[] = [];
+
+  let pointer = offset;
+  while (pointer < buf.length) {
+    if (buf.length - pointer < 1) return null;
+    const sectionKind = buf.readInt8(pointer);
+    pointer += 1;
+
+    switch(sectionKind) {
+      case 0: {
+        console.log(buf, pointer);
+        const { docs, remaining } = readBSONDocuments(buf, pointer);
+        assert.equal(docs.length, 1);
+        assert.equal(remaining.length, 0);
+        if (!docs[0]) throw new Error('Error');
+
+        const section = {
+          sectionKind,
+          doc: docs[0],
+        };
+
+        sections.push(section);
+      }
+
+      case 1: {
+        // Handle errors and assert all results
+        if (buf.length - pointer < 4) return null;
+        const size = buf.readInt32LE(pointer);
+        pointer += 4;
+
+        const { s: documentSequenceIdentifier, len } = readNullTerminatedString(buf, offset + pointer);
+        pointer += len;
+
+        const { docs, remaining } = readBSONDocuments(buf, pointer);
+        assert.equal(remaining.length, 0);
+
+        const section = {
+          sectionKind: sectionKind as 1,
+          size,
+          documentSequenceIdentifier,
+          docs,
+        };
+
+        sections.push(section);
+      }
+    }
+  }
+
+  return sections;
+}
+
 const server = net.createServer((clientSock: Socket) => {
   const clientRemote = `${clientSock.remoteAddress}:${clientSock.remotePort}`;
   log('Client connected', clientRemote);
@@ -303,6 +386,12 @@ const server = net.createServer((clientSock: Socket) => {
 
           case 1: {
             const parsedPayload = parseOpReplyPayload(payload);
+            console.log(parsedPayload);
+            break;
+          }
+
+          case 2013: {
+            const parsedPayload = parseOpMsgPayload(payload);
             console.log(parsedPayload);
             break;
           }
