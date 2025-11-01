@@ -1,5 +1,8 @@
 import { BSON } from 'bson';
 import net, { Socket } from 'node:net';
+import { buildOpReplyBuffer, parseOpQueryPayload } from '../lib/wire.js';
+import { handleOpQuery } from '../lib/handlers.js';
+import { prettyPrintHex } from '../lib/utils.js';
 
 const LISTEN_PORT = 27017;
 const LISTEN_HOST = '0.0.0.0';
@@ -99,10 +102,10 @@ const server = net.createServer((clientSock: Socket) => {
   console.log('Client connected', clientRemote);
 
   const bufHolder = { buf: Buffer.alloc(0) };
-  // Why not just a simple buffer?
 
   clientSock.on('data', (chunk: Buffer) => {
-    log(prettyHex(chunk));
+    // log(prettyHex(chunk));
+    prettyPrintHex(chunk);
     bufHolder.buf = Buffer.concat([bufHolder.buf, chunk]);
 
     processBuffer(bufHolder, (message) => {
@@ -112,14 +115,28 @@ const server = net.createServer((clientSock: Socket) => {
       const opCode = message.readInt32LE(12);
       const payload = message.subarray(16);
 
+      log('message from client', { from: clientRemote, messageLength, requestID, responseTo, opCode });
+
       try {
-        let docs = parseOpMsg(payload);
-        if (docs.length) {
-          log(`Parsed ${docs.length} BSON doc(s) from client message`);
-          docs.forEach((d, i) => log(`  doc[${i}]`, JSON.stringify(d)));
+        switch(opCode) {
+          case 2004: {
+            const parsedPayload = parseOpQueryPayload(payload);
+            console.dir(parsedPayload, { depth: null });
+            if (!parsedPayload) throw new Error('missing payload');
+            const response = handleOpQuery(parsedPayload);
+            const responseBuffer = buildOpReplyBuffer(response, requestID);
+
+            console.log('reply from server', { to: clientRemote, response });
+            clientSock.write(responseBuffer);
+            break;
+          }
+
+          case 1: {
+            // const parsedPayload
+          }
         }
       } catch(e: any) {
-        log('  BSON parse error:', e?.message);
+        log('  payload parse error:', e?.message);
         log('  payload hex sample:', prettyHex(payload, 128));
       }
     })

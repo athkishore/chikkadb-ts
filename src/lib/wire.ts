@@ -49,7 +49,7 @@ export function processBuffer(bufObj: BufferHolder, handler: (msg: Buffer) => vo
   }
 }
 
-type ParsedOpQueryPayload = {
+export type ParsedOpQueryPayload = {
   flags: number;
   fullCollectionName: string;
   numberToSkip: number;
@@ -73,7 +73,7 @@ function readNullTerminatedString(buf: Buffer, offset: number): { s: string, len
   };
 }
 
-type ReadBSONResult = {
+export type ReadBSONResult = {
   docs: Record<string, any>[];
   remaining: Buffer;
 }
@@ -131,7 +131,7 @@ export function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | nul
 
 }
 
-type ParsedOpReplyPayload = {
+export type ParsedOpReplyPayload = {
   responseFlags: number;
   cursorID: BigInt;
   startingFrom: number;
@@ -167,7 +167,7 @@ export function parseOpReplyPayload(payload: Buffer): ParsedOpReplyPayload | nul
   };
 }
 
-type ParsedOpMsgPayload = {
+export type ParsedOpMsgPayload = {
   flagBits: number;
   sections: OpMsgPayloadSection[];
   checksum?: number;
@@ -250,4 +250,41 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
   }
 
   return sections;
+}
+
+type MessageHeader = {
+  messageLength: number;
+  requestID: number;
+  responseTo: number;
+  opCode: number;
+};
+
+export type WireMessage = Omit<MessageHeader, 'opCode'> & ({
+  opCode: 1,
+  payload: ParsedOpReplyPayload;
+} | {
+  opCode: 2004;
+  payload: ParsedOpQueryPayload;
+} | {
+  opCode: 2013;
+  payload: ParsedOpMsgPayload;
+});
+
+export function buildOpReplyBuffer(payload: ParsedOpReplyPayload, replyTo: number) {
+  const bsonBytes = payload.documents.reduce((buf: Buffer, doc) => Buffer.concat([buf, BSON.serialize(doc)]), Buffer.alloc(0));
+  const responseFlags = Buffer.from([0x08, 0x00, 0x00, 0x00]);
+  const cursorID = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+  const startingFrom = Buffer.from([0x00, 0x00, 0x00, 0x00]);
+  const numberReturned = Buffer.from([0x01, 0x00, 0x00, 0x00]);
+  
+  const responsePayload = Buffer.concat([responseFlags, cursorID, startingFrom, numberReturned, bsonBytes]);
+  const msgLen = 16 + responsePayload.length;
+
+  const messageHeader = Buffer.alloc(16);
+  messageHeader.writeInt32LE(msgLen, 0);
+  messageHeader.writeInt32LE(1, 4);
+  messageHeader.writeInt32LE(replyTo, 8);
+  messageHeader.writeInt32LE(1, 12);
+
+  return Buffer.concat([messageHeader, responsePayload]);
 }

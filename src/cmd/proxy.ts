@@ -2,7 +2,7 @@ import net, { Socket } from 'node:net';
 import { BSON } from 'bson';
 import assert from 'node:assert';
 import { prettyPrintHex } from '../lib/utils.js';
-import { parseOpMsgPayload, parseOpQueryPayload, parseOpReplyPayload, processBuffer } from '../lib/mongo-wire.js';
+import { parseOpMsgPayload, parseOpQueryPayload, parseOpReplyPayload, processBuffer } from '../lib/wire.js';
 import { log } from 'node:console';
 
 const LISTEN_HOST = '0.0.0.0';
