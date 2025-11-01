@@ -150,6 +150,59 @@ function prettyPrintHex(buf: Buffer, wordLength = 4, lineLength = 16): void {
   process.stdout.write('\n');
 }
 
+type ParsedOpQueryPayload = {
+  flags: number;
+  fullCollectionName: string;
+  numberToSkip: number;
+  numberToReturn: number;
+  query: Record<string, any>;
+  returnFieldsSelector?: Record<string, any>;
+};
+
+function readNullTerminatedString(buf: Buffer, offset: number): { s: string, len: number } {
+  let s = '';
+  let pointer = offset;
+  while (buf[pointer] !== 0) {
+    if (pointer >= buf.length) throw new Error('Buffer overrun');
+    
+    s += buf.toString('utf-8', pointer, pointer + 1);
+    pointer++;
+  }
+  return {
+    s,
+    len: (pointer - offset) + 1,
+  };
+}
+
+function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | null /* Handle error */ {
+  let offset = 0;
+  
+  if (payload.length - offset < 4) return null;
+  const flags = payload.readInt32LE(offset);
+  offset += 4;
+
+  const { s: fullCollectionName, len } = readNullTerminatedString(payload, offset);
+  offset += len;
+
+  const numberToSkip = payload.readInt32LE(offset);
+  offset += 4;
+
+  const numberToReturn = payload.readInt32LE(offset);
+  offset += 4;
+
+  const query = BSON.deserialize(payload.subarray(offset));
+  // handle returnFieldsSelector;
+
+  return {
+    flags,
+    fullCollectionName,
+    numberToSkip,
+    numberToReturn,
+    query,
+  };
+
+}
+
 const server = net.createServer((clientSock: Socket) => {
   const clientRemote = `${clientSock.remoteAddress}:${clientSock.remotePort}`;
   log('Client connected', clientRemote);
@@ -192,6 +245,8 @@ const server = net.createServer((clientSock: Socket) => {
         switch(opCode) {
           case 2004:
             const parsedPayload = parseOpQueryPayload(payload);
+            console.log(parsedPayload);
+            break;
         }
       } catch(e: any) {
         log('  BSON parse error (client->server):', e?.message);
