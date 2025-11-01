@@ -135,10 +135,17 @@ function parseOpMsg(payload: Buffer): any[] {
   return docs;
 }
 
-function prettyHex(buf: Buffer, max = 80): string {
-  if (!buf || buf.length === 0) return '<empty>';
-  const s = buf.toString('hex');
-  return s.length <= max ? s : s.slice(0, max) + '...';
+function prettyPrintHex(buf: Buffer, wordLength = 4, lineLength = 16): void {
+  const bytesFormatted = [...buf].map(byte => byte.toString(16).padStart(2, '0').toUpperCase());
+  for (const [index, byte] of bytesFormatted.entries()) {
+    const isEndOfWord = (index + 1) % wordLength === 0;
+    const isEndOfLine = (index + 1) % lineLength === 0;
+
+    process.stdout.write(byte + ' ');
+    if (isEndOfLine) process.stdout.write('\n');
+    if (!isEndOfLine && isEndOfWord) process.stdout.write(' ');
+  }
+  process.stdout.write('\n');
 }
 
 const server = net.createServer((clientSock: Socket) => {
@@ -165,28 +172,30 @@ const server = net.createServer((clientSock: Socket) => {
       const payload = message.subarray(16);
 
       log('C->S message', { from: clientRemote, messageLength, requestID, responseTo, opCode });
-      try {
-        // const { docs, raw } = extractBsonDocs(payload);
-        let docs = parseOpMsg(payload);
-        if (docs.length) {
-          log(`  Parsed ${docs.length} BSON doc(s) from client message`);
-          docs.forEach((d, i) => log(`    doc[${i}]`, JSON.stringify(d)));
-        }
+      prettyPrintHex(chunk);
+      // try {
+      //   // const { docs, raw } = extractBsonDocs(payload);
+      //   let docs = parseOpMsg(payload);
+      //   if (docs.length) {
+      //     log(`  Parsed ${docs.length} BSON doc(s) from client message`);
+      //     docs.forEach((d, i) => log(`    doc[${i}]`, JSON.stringify(d)));
+      //   }
 
-        // if (raw.length) {
-        //   raw.forEach((rbuf, i) => 
-        //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
-        //   );
-        // }
-      } catch(e: any) {
-        log('  BSON parse error (client->server):', e?.message);
-        log('  payload hex sample:', prettyHex(payload, 128));
-      }
+      //   // if (raw.length) {
+      //   //   raw.forEach((rbuf, i) => 
+      //   //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
+      //   //   );
+      //   // }
+      // } catch(e: any) {
+      //   log('  BSON parse error (client->server):', e?.message);
+      //   log('  payload hex sample:', prettyHex(payload, 128));
+      // }
     });
   });
 
   serverSock.on('data', (chunk: Buffer) => {
     clientSock.write(chunk);
+
     s2cBuf.buf = Buffer.concat([s2cBuf.buf, chunk]);
 
     processBuffer(s2cBuf, (message) => {
@@ -197,23 +206,23 @@ const server = net.createServer((clientSock: Socket) => {
       const payload = message.subarray(16);
 
       log('S->C message', { to: clientRemote, messageLength, requestID, responseTo, opCode });
-
-      try {
-        // const { docs, raw } = extractBsonDocs(payload);
-        let docs = parseOpMsg(payload);
-        if (docs.length) {
-          log(`  Parsed ${docs.length} BSON doc(s) from server response`);
-          docs.forEach((d, i) => log(`    docs[${i}]`, JSON.stringify(d)));
-        }
-        // if (raw.length) {
-        //   raw.forEach((rbuf, i) =>
-        //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
-        //   );
-        // }
-      } catch(e: any) {
-        log('  BSON parse error (server->client):', e?.message);
-        log('  payload hex sample:', prettyHex(payload, 128));
-      }
+      prettyPrintHex(chunk);
+      // try {
+      //   // const { docs, raw } = extractBsonDocs(payload);
+      //   let docs = parseOpMsg(payload);
+      //   if (docs.length) {
+      //     log(`  Parsed ${docs.length} BSON doc(s) from server response`);
+      //     docs.forEach((d, i) => log(`    docs[${i}]`, JSON.stringify(d)));
+      //   }
+      //   // if (raw.length) {
+      //   //   raw.forEach((rbuf, i) =>
+      //   //     log(`    raw[${i}] hex(${rbuf.length})`, prettyHex(rbuf, 128))
+      //   //   );
+      //   // }
+      // } catch(e: any) {
+      //   log('  BSON parse error (server->client):', e?.message);
+      //   log('  payload hex sample:', prettyHex(payload, 128));
+      // }
     });
   });
 
