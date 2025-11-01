@@ -16,22 +16,6 @@ interface BufferHolder {
   buf: Buffer;
 }
 
-// let docs: any[] = [];
-// if (opCode === 2013) {            // OP_MSG
-//   docs = parseOpMsg(payload);
-// } else if (opCode === 2004 || opCode === 1) { // OP_QUERY / OP_REPLY
-//   const { docs: d } = extractBsonDocs(payload);
-//   docs = d;
-// }
-
-// if (docs.length) {
-//   log(`  Parsed ${docs.length} BSON doc(s)`);
-//   docs.forEach((d, i) => log(`    doc[${i}]`, JSON.stringify(d)));
-// } else {
-//   log(`  No BSON docs found, raw hex`, prettyHex(payload, 128));
-// }
-
-
 function processBuffer(bufObj: BufferHolder, handler: (msg: Buffer) => void) {
   let buf = bufObj.buf;
   let offset = 0;
@@ -60,80 +44,6 @@ function processBuffer(bufObj: BufferHolder, handler: (msg: Buffer) => void) {
 interface ExtractedDocs {
   docs: any[];
   raw: Buffer[];
-}
-
-// function extractBsonDocs(payload: Buffer): ExtractedDocs {
-//   const docs: any[] = [];
-//   const raw: Buffer[] = [];
-//   let i = 0;
-
-//   while (i + 4 <= payload.length) {
-//     const docLen = payload.readInt32LE(i);
-//     if (docLen <= 0 || i + docLen > payload.length) break;
-
-//     const docBuf = payload.subarray(i, i + docLen);
-
-//     try {
-//       const doc = BSON.deserialize(docBuf);
-//       docs.push(doc);
-//     } catch {
-//       raw.push(docBuf);
-//     }
-//     i += docLen;
-//   }
-
-//   if (i < payload.length) raw.push(payload.subarray(1));
-//   return { docs, raw };
-// }
-
-function parseOpMsg(payload: Buffer): any[] {
-  const docs: any[] = [];
-  let offset = 0;
-
-  if (payload.length < 4) return docs;
-  offset += 4;
-
-  while (offset < payload.length) {
-    const sectionKind = payload[offset];
-    offset += 1;
-
-    if (sectionKind === 0) {
-      const remaining = payload.subarray(offset);
-      const docLen = remaining.readInt32LE(0);
-      if (docLen > 0 && docLen <= remaining.length) {
-        const docBuf = remaining.subarray(0, docLen);
-
-        try {
-          docs.push(BSON.deserialize(docBuf));
-        } catch {
-
-        }
-
-        offset += docLen;
-      } else {
-        break;
-      }
-    } else if (sectionKind === 1) {
-      const size = payload.readInt32LE(offset);
-      const end = offset + size;
-      const seqIdEnd = payload.indexOf(0, offset + 4);
-      if (seqIdEnd < 0 || seqIdEnd >= end) break;
-      let pos = seqIdEnd + 1;
-      while (pos + 4 <= end) {
-        const docLen = payload.readInt32LE(pos);
-        if (docLen <= 0 || pos + docLen > end) break;
-        const docBuf = payload.subarray(pos, pos + docLen);
-        try {
-          docs.push(BSON.deserialize(docBuf));
-        } catch {}
-        pos += docLen;
-      }
-      offset = end;
-    } else {
-      break;
-    }
-  }
-  return docs;
 }
 
 function prettyPrintHex(buf: Buffer, wordLength = 4, lineLength = 16): void {
@@ -310,8 +220,8 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
 
     switch(sectionKind) {
       case 0: {
-        console.log(buf, pointer);
-        const { docs, remaining } = readBSONDocuments(buf, pointer);
+        const size = buf.readInt32LE(pointer);
+        const { docs, remaining } = readBSONDocuments(buf.subarray(pointer, pointer + size), 0);
         assert.equal(docs.length, 1);
         assert.equal(remaining.length, 0);
         if (!docs[0]) throw new Error('Error');
@@ -322,6 +232,8 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
         };
 
         sections.push(section);
+        pointer += size;
+        break;
       }
 
       case 1: {
@@ -344,6 +256,7 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
         };
 
         sections.push(section);
+        break;
       }
     }
   }
@@ -380,19 +293,19 @@ const server = net.createServer((clientSock: Socket) => {
         switch(opCode) {
           case 2004: {
             const parsedPayload = parseOpQueryPayload(payload);
-            console.log(parsedPayload);
+            console.dir(parsedPayload, { depth: null });
             break;
           }
 
           case 1: {
             const parsedPayload = parseOpReplyPayload(payload);
-            console.log(parsedPayload);
+            console.dir(parsedPayload, { depth: null });
             break;
           }
 
           case 2013: {
             const parsedPayload = parseOpMsgPayload(payload);
-            console.log(parsedPayload);
+            console.dir(parsedPayload, { depth: null });
             break;
           }
         }
@@ -421,13 +334,19 @@ const server = net.createServer((clientSock: Socket) => {
         switch(opCode) {
           case 2004: {
             const parsedPayload = parseOpQueryPayload(payload);
-            console.log(parsedPayload);
+            console.dir(parsedPayload, { depth: null });
             break;
           }
 
           case 1: {
             const parsedPayload = parseOpReplyPayload(payload);
-            console.log(parsedPayload);
+            console.dir(parsedPayload, { depth: null });
+            break;
+          }
+
+          case 2013: {
+            const parsedPayload = parseOpMsgPayload(payload);
+            console.dir(parsedPayload, { depth: null });
             break;
           }
         }
