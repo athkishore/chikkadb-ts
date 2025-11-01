@@ -1,4 +1,4 @@
-> This project is in the initial stages of development. Feel free  > to look around and play with the code.
+> This project is in the initial stages of development. Feel free  to look around and play with the code.
 
 # Introduction
 
@@ -13,6 +13,8 @@ The goals of SQLite-Mongo are ambitious and modest at once. It will never aim to
 This is first and foremost a project for me to have fun learning new things I would otherwise not have explored. At the same time, I see that it can fill a gap that is currently not served by any existing solution out there, if it turns out half as well as I hope it will.
 
 There are intresting projects such as [LiteDB](https://www.litedb.org/), [Doclite](https://github.com/dwgebler/doclite), etc. but a lightweight mongod substitute that can talk to MongoDB clients is something different and will be so awesome to have.
+
+Putting it out there even at this early stage in the spirit of building in public.
 
 # Roadmap
 
