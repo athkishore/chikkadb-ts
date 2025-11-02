@@ -5,7 +5,7 @@
 
 SQLite-Mongo is envisaged as a mongod-compatible server application, which you can connect to using any of your favourite MongoDB clients or language drivers. The plan is to use SQLite as the storage backend.
 
-The idea for this project is the result of my frustration at mongod being restricted to a narrow range of environments. For a while, I was hopeful that FerretDB would fill the gap, but with v2 they have completely dropped the SQLite backend to focus on Postgres.
+The idea for this project is the result of my frustration at mongod being restricted to a narrow range of environments. For a while, I was hopeful that [FerretDB](https://www.ferretdb.com/) would fill the gap, but with v2 they have completely dropped the SQLite backend to focus on Postgres.
 
 The goals of SQLite-Mongo are ambitious and modest at once. It will never aim to be a full-fledged distributed database - no replication or sharding. However, it aims to implement as completely as possible the rich MongoDB commands (including sessions). So completely as to be able to effectively substitute mongod with sqlite-mongo for single-node operations.
 
