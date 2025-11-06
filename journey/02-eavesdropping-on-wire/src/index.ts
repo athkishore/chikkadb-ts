@@ -20,15 +20,15 @@ async function handleNewConnection(clientSock: Socket) {
     () => console.log('created proxy connection to mongod server')
   );
 
-  let c2sBuf = Buffer.alloc(0);
-  let s2cBuf = Buffer.alloc(0);
+  const c2sBufHolder = { buf: Buffer.alloc(0) };
+  const s2cBufHolder = { buf: Buffer.alloc(0) };
 
   // register a callback to forward to server
   // any data sent from client
   clientSock.on('data', (data) => {
     serverSock.write(data);
-    c2sBuf = Buffer.concat([c2sBuf, data]);
-    const messages = processBuffer(c2sBuf); // to be defined
+    c2sBufHolder.buf = Buffer.concat([c2sBufHolder.buf, data]);
+    const messages = processBuffer(c2sBufHolder); // to be defined
     messages.forEach(message => {
       console.log(`C -> S message`, message);
     });
@@ -38,8 +38,8 @@ async function handleNewConnection(clientSock: Socket) {
   // any data sent from server
   serverSock.on('data', (data) => {
     clientSock.write(data);
-    s2cBuf = Buffer.concat([s2cBuf, data]);
-    const messages = processBuffer(s2cBuf);
+    s2cBufHolder.buf = Buffer.concat([s2cBufHolder.buf, data]);
+    const messages = processBuffer(s2cBufHolder);
     messages.forEach(message => {
       console.log('S -> C message', message);
     })
@@ -57,7 +57,8 @@ server.listen(LISTEN_PORT, LISTEN_PORT, () => {
   );
 })
 
-function processBuffer(buf: Buffer) {
+function processBuffer(bufHolder: { buf: Buffer }) {
+  const buf = bufHolder.buf;
   let offset = 0;
   let messages: WireMessage[] = [];
 
@@ -71,13 +72,14 @@ function processBuffer(buf: Buffer) {
     if (buf.length - offset < messageLength) break;
 
     const messageBuf = buf.subarray(offset, offset + messageLength);
+
     const message = handleMessage(messageBuf);
     messages.push(message);
 
     offset += messageLength;
 
     // Remove the processed bytes from the buffer
-    buf = buf.subarray(offset);
+    bufHolder.buf = buf.subarray(offset);
   }
   return messages;
 }
@@ -99,7 +101,8 @@ function handleMessage(buf: Buffer): WireMessage {
   const responseTo = buf.readInt32LE(8);
   const opCode = buf.readInt32LE(12);
 
-  
+  // todo: decode payload
+
   return {
     header: { messageLength, requestID, responseTo, opCode },
   };
