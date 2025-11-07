@@ -30,3 +30,4 @@ There are intresting projects such as [LiteDB](https://www.litedb.org/), [Doclit
 Putting it out there even at this early stage in the spirit of building in public. I plan to document my journey on my [blog](https://akishore.in/blog). The journey matters as much as the outcome.
 
 - [2025-10-31 Talking to mongod](https://akishore.in/posts/2025-10-31-talking-to-mongod)
+- [2025-11-07 Eavesdropping on the Wire](https://akishore.in/posts/2025-11-07-eavesdropping-on-wire)
