@@ -6,7 +6,7 @@ const FILTER_OPERATORS = [
   '$or',
   '$eq',
   '$lt',
-  'lte',
+  '$lte',
   '$gt',
   '$gte',
 ] as const;
@@ -44,6 +44,9 @@ const { error, filterParseTree } = parseFilter(filter);
 if (error) console.error(error);
 if (filterParseTree) console.dir(filterParseTree, { depth: null });
 
+const sql = filterParseTree ? convertFilterTreeToSQL(collection, filterParseTree) : null;
+console.log(sql);
+
 type FilterOperator = typeof FILTER_OPERATORS[number];
 type LeafOperator = typeof LEAF_OPERATORS[number];
 type InteriorOperator = typeof INTERIOR_OPERATORS[number];
@@ -59,7 +62,7 @@ interface FieldReference {
 
 interface FilterParseNode {
   operator: FilterOperator;
-  operands: (FilterParseNode | FieldReference | string | number | boolean | BigInt | null)[];
+  operands: (FilterParseNode | FieldReference | string | number | boolean /*| BigInt*/ | null)[]; // Array, Object
 }
 
 function parseFilter(
@@ -160,67 +163,77 @@ function parseElement(
   throw new Error(`Unexpected key-value pair: ${key} ${value}`);
 }
 
-// function parseFilter(filterJSON: string): { error: Error | null, filterParseTree: FilterParseTree | null } {
-//   try {
-//     const filter = JSON.parse(filterJSON);
-//     const elements = Object.entries(filter);
+// This is a specific backend implementation and can change
+function convertFilterTreeToSQLWhere(filter: FilterParseNode): string {
+  const { operator, operands } = filter;
 
-//     const operands: FilterParseNode[] = [];
+  const sqlFragments: string [] = [];
 
-//     for (const [key, value] of elements) {
-//       if (
-//         !key.match(/^\$/) 
-//         && (
-//           typeof value === 'string'
-//           || typeof value === 'number'
-//           || typeof value === 'bigint'
-//           || typeof value === 'boolean'
-//           || value === null
-//         )
-//       ) {
-//         operands.push({
-//           operator: '$eq',
-//           operands: [{ $ref: key }, value]
-//         });
-//       } else {
-//         throw new Error('Operand type not supported yet');
-//       }
-//     }
-
-//     return {
-//       error: null,
-//       filterParseTree: {
-//         operator: '$and',
-//         operands,
-//       }
-//     }
-//   } catch(error) {
-//     return {
-//       error: error as Error,
-//       filterParseTree: null,
-//     };
-//   }
-// }
-
-// const FilterNodetoSQLWhereFragmentMap = {
-//   $eq: function (filterNode: FilterParseNode) {
-//     const { operator, operands } = filterNode;
-//     if (operator !== '$eq') throw new Error('An unexpected error occured'); // print node id
-//     if (operands.length !== 2) throw new Error('$eq needs exactly two operands');
+  for (const operand of operands) {
+    if ((operand as FilterParseNode).operator) {
+      const sqlFragment = convertFilterTreeToSQLWhere(operand as FilterParseNode);
+      sqlFragments.push(sqlFragment);
+    } else if ((operand as FieldReference).$ref) {
+      const fieldPathSegments = (operand as FieldReference).$ref.split('.');
+      const sqlFragment = `'$.${fieldPathSegments.map(el => `${el}%`).join('.')}'`;
+      sqlFragments.push(sqlFragment);
+    } else if (typeof operand === 'string') {
+      sqlFragments.push(`'${operand}'`);
+    } else if (typeof operand === 'number') {
+      sqlFragments.push(`${operand}`);
+    } else if (typeof operand === 'boolean') {
+      sqlFragments.push(operand ? 'TRUE' : 'FALSE');
+    } else if (operand === null) {
+      sqlFragments.push('NULL');
+    }
 
 
-//     let sqlFragment = ``;
-//     for (const operand of operands) {
-//       if (operand && (operand as FieldReference).$ref) {
-//         const fieldPath = (operand as FieldReference).$ref.split('.');
+  }
+  switch (operator) {
+    case '$and': 
+      return sqlFragments.map(o => `(${o})`).join(' AND ');
 
-        
+    case '$or':
+      return sqlFragments.map(o => `(${o})`).join(' OR ');
 
-//       }
-//     }
-//   }
-// };
+    case '$eq':
+      return `st.fullkey LIKE ${sqlFragments[0]} AND st.value = ${sqlFragments[1]}`; // highly specific to this implementation
 
-// function getSQLWhereFromFilter(filter: FilterParseTree) {
+    case '$gt':
+      return `st.fullkey LIKE ${sqlFragments[0]} AND st.value > ${sqlFragments[1]}`;
 
-// }
+    case '$gte':
+      return `st.fullkey LIKE ${sqlFragments[0]} AND st.value >= ${sqlFragments[1]}`;
+
+    case '$lt':
+      return `st.fullkey LIKE ${sqlFragments[0]} AND st.value < ${sqlFragments[1]}`;
+
+    case '$lte':
+      return `st.fullkey LIKE ${sqlFragments[0]} AND st.value < ${sqlFragments[1]}`;
+
+    default: throw new Error(`Unexpected operator: ${operator}`)
+  }
+
+}
+
+function convertFilterTreeToSQL(collection: string, filter: FilterParseNode): string {
+  const where = convertFilterTreeToSQLWhere(filter);
+
+  const sql = `
+    .timer on
+    SELECT m.doc
+    FROM ${collection} as c
+    WHERE EXISTS (
+      WITH subtree(key, fullkey, value) AS (
+        SELECT jt.key, jt.fullkey, jt.value
+        FROM json_tree(m.doc) AS jt
+      )
+      SELECT 1
+      FROM subtree AS st
+      WHERE ${where}
+    )
+  `;
+
+  return sql;
+}
+
