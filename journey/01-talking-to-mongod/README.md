@@ -1,1 +1,0 @@
-This package is the accompanying source code to the first post in the series documenting the building of SQLite-Mongo: [Talking to mongod](https://akishore.in/posts/2025-10-31-talking-to-mongod/)
