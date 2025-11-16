@@ -1,5 +1,5 @@
 {
-  "name": "sqlite-mongo",
+  "name": "chikkadb-ts",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
