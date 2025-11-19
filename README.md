@@ -19,7 +19,7 @@ ChikkaDB looks to leverage SQLite's native JSONB storage format and its powerful
 
 While this might seem unwieldy, in practice I have found it possible to write equivalent SQL for even complex MongoDB queries and aggregation pipelines. The inbuilt [SQLite JSONB library](https://sqlite.org/json1.html) is versatile and provides functions that cover most if not all cases in manipulating JSON. 
 
-The challenge seems to be to implement the translation layer well. It is possible that there are some rough edges that I haven't encountered yet, but it seems unlikely there could be somethig that can't be solved through custom extensions.
+The challenge seems to be to implement the translation layer well. It is possible that there are some rough edges that I haven't encountered yet, but it seems unlikely there could be problems that can't be solved through custom extensions even if they might not be amenable to being expressed in SQL.
 
 ## Major Components
 1. **TCP server** that handles communication with MongoDB Client 
