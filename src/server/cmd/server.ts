@@ -1,115 +1,37 @@
-import { BSON } from 'bson';
-import net, { Socket } from 'node:net';
-import { buildOpMsgBuffer, buildOpReplyBuffer, parseOpMsgPayload, parseOpQueryPayload } from '../lib/wire.js';
-import { handleOpMsg, handleOpQuery } from '../lib/handlers.js';
-import { prettyPrintHex } from '../lib/utils.js';
+import { Socket, createServer } from "net";
+import { encodeMessage, processBuffer, type WireMessage } from "../lib/wire.js";
+import { ObjectId } from "bson";
 
-const LISTEN_PORT = 27017;
-const LISTEN_HOST = '0.0.0.0';
+const HOST = '127.0.0.1';
+const PORT = 9000;
 
-function log(...args: unknown[]) {
-  console.log(new Date().toISOString(), ...args);
-}
+const server = createServer(handleNewConnection);
 
-interface BufferHolder {
-  buf: Buffer;
-}
-
-function processBuffer(bufObj: BufferHolder, handler: (msg: Buffer) => void) {
-  let buf = bufObj.buf;
-  let offset = 0;
-  
-  while(buf.length - offset >= 4) {
-    const messageLength = buf.readInt32LE(offset);
-    if (messageLength <= 0) {
-      log('Invalid messageLength', messageLength);
-      bufObj.buf = Buffer.alloc(0);
-      return;
-    }
-    if (buf.length - offset < messageLength) break;
-
-    const message = buf.subarray(offset, offset + messageLength);
-    handler(message);
-    offset += messageLength;
-  }
-
-  if (offset < buf.length) {
-    bufObj.buf = buf.subarray(offset);
-  } else {
-    bufObj.buf = Buffer.alloc(0);
-  }
-}
-
-function prettyHex(buf: Buffer, max = 80): string {
-  if (!buf || buf.length === 0) return '<empty>';
-  const s = buf.toString('hex');
-  return s.length <= max ? s : s.slice(0, max) + '...';
-}
-
-
-const server = net.createServer((clientSock: Socket) => {
-  const clientRemote = `${clientSock.remoteAddress}:${clientSock.remotePort}`;
-  console.log('Client connected', clientRemote);
+async function handleNewConnection(sock: Socket) {
+  console.log('client connected from port:', sock.remotePort);
 
   const bufHolder = { buf: Buffer.alloc(0) };
 
-  clientSock.on('data', (chunk: Buffer) => {
-    // log(prettyHex(chunk));
-    prettyPrintHex(chunk);
-    bufHolder.buf = Buffer.concat([bufHolder.buf, chunk]);
+  sock.on('data', async (data) => {
+    bufHolder.buf = Buffer.concat([bufHolder.buf, data]);
+    const messages = processBuffer(bufHolder);
+    for (const message of messages) {
+      console.log(`C -> S message`, message.header);
+      console.dir(message.payload, { depth: null });
+      const responseBuf = await getEncodedResponse(message);
+      sock.write(responseBuf);
+    }
+  });
+}
 
-    processBuffer(bufHolder, (message) => {
-      const messageLength = message.readInt32LE(0);
-      const requestID = message.readInt32LE(4);
-      const responseTo = message.readInt32LE(8);
-      const opCode = message.readInt32LE(12);
-      const payload = message.subarray(16);
-
-      log('message from client', { from: clientRemote, messageLength, requestID, responseTo, opCode });
-
-      try {
-        switch(opCode) {
-          case 2004: {
-            const parsedPayload = parseOpQueryPayload(payload);
-            console.dir(parsedPayload, { depth: null });
-            if (!parsedPayload) throw new Error('missing payload');
-            const response = handleOpQuery(parsedPayload);
-            const responseBuffer = buildOpReplyBuffer(response, requestID);
-
-            console.log('reply from server', { to: clientRemote, response });
-            clientSock.write(responseBuffer);
-            break;
-          }
-
-          case 1: {
-            // const parsedPayload
-            break;
-          }
-
-          case 2013: {
-            const parsedPayload = parseOpMsgPayload(payload);
-            console.dir(parsedPayload, { depth: null });
-            if (!parsedPayload) throw new Error('missing payload');
-            const response = handleOpMsg(parsedPayload);
-            const responseBuffer = buildOpMsgBuffer(response, requestID);
-
-            console.log('reply from server', { to: clientRemote, response });
-
-            prettyPrintHex(responseBuffer);
-            console.log(parseOpMsgPayload(responseBuffer.subarray(16)));
-            clientSock.write(responseBuffer);
-            break;
-          }
-        }
-      } catch(e: any) {
-        log('  payload parse error:', e?.message);
-        log('  payload hex sample:', prettyHex(payload, 128));
-      }
-    })
-
-  })
+server.listen(PORT, () => {
+  console.log(`Custom Mongo Server listening on`, `${HOST}:${PORT}`);
 });
 
-server.listen(LISTEN_PORT, LISTEN_HOST, () => {
-  console.log(`MongoDB-SQLite listening on ${LISTEN_HOST}:${LISTEN_PORT}`);
-})
+async function getEncodedResponse(message: WireMessage): Promise<Buffer> {
+  // const response = await getResponse(message);
+  // const responseBuf = encodeMessage(response);
+
+  // return responseBuf;
+  return Buffer.alloc(0);
+}

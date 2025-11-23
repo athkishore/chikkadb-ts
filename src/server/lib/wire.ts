@@ -1,222 +1,173 @@
 import { BSON } from "bson";
-import assert from "node:assert";
 
-const REQUEST_ID = 2;
-const OP_MSG = 2013;
-
-export function buildOpMsg(doc: Record<string, any>): Buffer {
-  const bsonBytes = BSON.serialize(doc);
-  const flags = Buffer.alloc(4);
-  const sectionKind = Buffer.from([0x00]);
-  const body = Buffer.concat([flags, sectionKind, bsonBytes]);
-  const msgLen = 16 + body.length;
-
-  const header = Buffer.alloc(16);
-  header.writeInt32LE(msgLen, 0);
-  header.writeInt32LE(REQUEST_ID, 4);
-  header.writeInt32LE(0, 8);
-  header.writeInt32LE(OP_MSG, 12);
-
-  return Buffer.concat([header, body]);
+export type MessageHeader = {
+  messageLength: number;
+  requestID: number;
+  responseTo: number;
+  opCode: number;
 }
 
-interface BufferHolder {
-  buf: Buffer;
-}
+export type WireMessage = {
+  header: MessageHeader;
+  payload: 
+    | OpQueryPayload
+    | OpReplyPayload
+    | OpMsgPayload;
+};
 
-export function processBuffer(bufObj: BufferHolder, handler: (msg: Buffer) => void) {
-  let buf = bufObj.buf;
-  let offset = 0;
-  
-  while(buf.length - offset >= 4) {
-    const messageLength = buf.readInt32LE(offset);
-    if (messageLength <= 0) {
-      throw new Error('Invalid messageLength: ' + messageLength);
-      bufObj.buf = Buffer.alloc(0);
-      return;
-    }
-    if (buf.length - offset < messageLength) break;
-
-    const message = buf.subarray(offset, offset + messageLength);
-    handler(message);
-    offset += messageLength;
-  }
-
-  if (offset < buf.length) {
-    bufObj.buf = buf.subarray(offset);
-  } else {
-    bufObj.buf = Buffer.alloc(0);
-  }
-}
-
-export type ParsedOpQueryPayload = {
+type OpQueryPayload = {
+  _type: 'OP_QUERY';
   flags: number;
   fullCollectionName: string;
   numberToSkip: number;
   numberToReturn: number;
-  query: Record<string, any>;
-  returnFieldsSelector?: Record<string, any>;
+  query: BSON.Document;
+  returnFieldsSelector?: BSON.Document | undefined;
 };
 
-function readNullTerminatedString(buf: Buffer, offset: number): { s: string, len: number } {
-  let s = '';
-  let pointer = offset;
-  while (buf[pointer] !== 0) {
-    if (pointer >= buf.length) throw new Error('Buffer overrun');
-    
-    s += buf.toString('utf-8', pointer, pointer + 1);
-    pointer++;
+type OpReplyPayload = {
+  _type: 'OP_REPLY';
+  responseFlags: number;
+  cursorID: BigInt;
+  startingFrom: number;
+  numberReturned: number;
+  documents: BSON.Document[];
+};
+
+type OpMsgPayload = {
+  _type: 'OP_MSG';
+  flagBits: number;
+  sections: OpMsgPayloadSection[];
+  checksum?: number;
+};
+
+type OpMsgPayloadSection = {
+  sectionKind: 0;
+  document: BSON.Document;
+} | {
+  sectionKind: 1;
+  size: number;
+  documentSequenceIdentifier: string;
+  documents: BSON.Document[];
+};
+
+export function decodeMessage(buf: Buffer): WireMessage {
+  const messageLength = buf.readInt32LE(0);
+  const requestID = buf.readInt32LE(4);
+  const responseTo = buf.readInt32LE(8);
+  const opCode = buf.readInt32LE(12);
+
+  let payload: WireMessage['payload'];
+
+  switch(opCode) {
+    case 2004: 
+      payload = decodeOpQueryPayload(buf.subarray(16));
+      break;
+    case 1:
+      payload = decodeOpReplyPayload(buf.subarray(16));
+      break;
+    case 2013:
+      payload = decodeOpMsgPayload(buf.subarray(16));
+      break;
+    default:
+      throw new Error('Unknown opcode');
   }
+
   return {
-    s,
-    len: (pointer - offset) + 1,
+    header: { messageLength, requestID, responseTo, opCode },
+    payload
   };
 }
 
-export type ReadBSONResult = {
-  docs: Record<string, any>[];
-  remaining: Buffer;
-}
-function readBSONDocuments(buf: Buffer, offset: number): ReadBSONResult {
-  let docs: Record<string, any>[] = [];
-  let pointer = offset;
+function decodeOpQueryPayload(buf: Buffer): OpQueryPayload {
+  let pointer = 0;
 
-  while (pointer < buf.length) {
-    if (buf.length - pointer < 4) break;
-    const size = buf.readInt32LE(pointer);
-    if (buf.length - pointer < size) break;
-    const docBuf = buf.subarray(pointer, pointer + size);
-    try {
-      const doc = BSON.deserialize(docBuf);
-      docs.push(doc);
-    } catch {
-      throw new Error('Invalid BSON at offset ' + pointer);
-    }
-    pointer += size;
-  }
+  const flags = buf.readInt32LE(pointer);
+  pointer += 4;
+
+  const { s: fullCollectionName, len } = readNullTerminatedString(buf, pointer);
+  pointer += len;
+
+  const numberToSkip = buf.readInt32LE(pointer);
+  pointer += 4;
+
+  const numberToReturn = buf.readInt32LE(pointer);
+  pointer += 4;
+
+  const { documents: [query, returnFieldsSelector] } = readBSONDocuments(buf, pointer);
+
+  if (!query) throw new Error('Missing query')
 
   return {
-    docs,
-    remaining: buf.subarray(pointer),
-  }
-}
-
-export function parseOpQueryPayload(payload: Buffer): ParsedOpQueryPayload | null /* Handle error */ {
-  let offset = 0;
-  
-  if (payload.length - offset < 4) return null;
-  const flags = payload.readInt32LE(offset);
-  offset += 4;
-
-  const { s: fullCollectionName, len } = readNullTerminatedString(payload, offset);
-  offset += len;
-
-  const numberToSkip = payload.readInt32LE(offset);
-  offset += 4;
-
-  const numberToReturn = payload.readInt32LE(offset);
-  offset += 4;
-
-  const { docs: [query, returnFieldsSelector] } = readBSONDocuments(payload.subarray(offset), 0);
-  
-  if (!query) return null;
-
-  return {
+    _type: 'OP_QUERY',
     flags,
     fullCollectionName,
     numberToSkip,
     numberToReturn,
     query,
+    returnFieldsSelector,
   };
-
 }
 
-export type ParsedOpReplyPayload = {
-  responseFlags: number;
-  cursorID: BigInt;
-  startingFrom: number;
-  numberReturned: number;
-  documents: Record<string, any>[];
-}
+function decodeOpReplyPayload(buf: Buffer): OpReplyPayload {
+  let pointer = 0;
+  const responseFlags = buf.readInt32LE(pointer);
+  pointer += 4;
 
-export function parseOpReplyPayload(payload: Buffer): ParsedOpReplyPayload | null /*Handle error*/ {
-  let offset = 0;
-  if (payload.length - offset < 4) return null;
-  const responseFlags = payload.readInt32LE(offset);
-  offset += 4;
+  const cursorID = buf.readBigInt64LE(pointer);
+  pointer += 8;
 
-  if (payload.length - offset < 8) return null;
-  const cursorID = payload.readBigInt64LE(offset);
-  offset += 8;
+  const startingFrom = buf.readInt32LE(pointer);
+  pointer += 4;
 
-  if (payload.length - offset < 4) return null;
-  const startingFrom = payload.readInt32LE(offset);
-  offset += 4;
+  const numberReturned = buf.readInt32LE(pointer);
+  pointer += 4;
 
-  if (payload.length - offset < 4) return null;
-  const numberReturned = payload.readInt32LE(offset);
-  offset += 4;
+  const { documents } = readBSONDocuments(buf, pointer);
 
-  const { docs: documents } = readBSONDocuments(payload, offset);
   return {
+    _type: 'OP_REPLY',
     responseFlags,
     cursorID,
     startingFrom,
     numberReturned,
-    documents
+    documents,
   };
 }
 
-export type ParsedOpMsgPayload = {
-  flagBits: number;
-  sections: OpMsgPayloadSection[];
-  checksum?: number;
-}
+function decodeOpMsgPayload(buf: Buffer): OpMsgPayload {
+  let pointer = 0;
+  const flagBits = buf.readInt32LE(pointer);
+  pointer += 4;
 
-export function parseOpMsgPayload(payload: Buffer): ParsedOpMsgPayload | null /*Handle error*/ {
-  let offset = 0;
-  if (payload.length - offset < 4) return null;
-  const flagBits = payload.readInt32LE(offset);
-  offset += 4;
+  const sections = decodeOpMsgPayloadSections(buf, pointer);
 
-  const sections = readOpMsgPayloadSections(payload, offset);
-  if (!sections) throw new Error('Error');
+  // Skip the optional checksum
 
   return {
+    _type: 'OP_MSG',
     flagBits,
     sections,
-  };
+  }
 }
 
-export type OpMsgPayloadSection = {
-  sectionKind: 0;
-  doc: Record<string, any>;
-} | {
-  sectionKind: 1;
-  size: number;
-  documentSequenceIdentifier: string;
-  docs: Record<string, any>[];
-};
-function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSection[] | null {
+function decodeOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSection[] {
   const sections: OpMsgPayloadSection[] = [];
-
   let pointer = offset;
+
   while (pointer < buf.length) {
-    if (buf.length - pointer < 1) return null;
-    const sectionKind = buf.readInt8(pointer);
+    const sectionKind = buf.readUint8(pointer);
     pointer += 1;
 
     switch(sectionKind) {
       case 0: {
         const size = buf.readInt32LE(pointer);
-        const { docs, remaining } = readBSONDocuments(buf.subarray(pointer, pointer + size), 0);
-        assert.equal(docs.length, 1);
-        assert.equal(remaining.length, 0);
-        if (!docs[0]) throw new Error('Error');
+        const { documents, len } = readBSONDocuments(buf.subarray(pointer, pointer + size), 0);
+        // TODO: Assert that exactly one document exists
 
         const section = {
           sectionKind,
-          doc: docs[0],
+          document: documents[0]!,
         };
 
         sections.push(section);
@@ -225,22 +176,21 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
       }
 
       case 1: {
-        // Handle errors and assert all results
-        if (buf.length - pointer < 4) return null;
         const size = buf.readInt32LE(pointer);
         pointer += 4;
 
         const { s: documentSequenceIdentifier, len } = readNullTerminatedString(buf, offset + pointer);
         pointer += len;
 
-        const { docs, remaining } = readBSONDocuments(buf, pointer);
-        assert.equal(remaining.length, 0);
+        const { documents } = readBSONDocuments(buf, pointer);
+
+        // TODO: Assert that there are no more bytes to be decoded
 
         const section = {
-          sectionKind: sectionKind as 1,
+          sectionKind,
           size,
           documentSequenceIdentifier,
-          docs,
+          documents,
         };
 
         sections.push(section);
@@ -252,92 +202,219 @@ function readOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSect
   return sections;
 }
 
-type MessageHeader = {
-  messageLength: number;
-  requestID: number;
-  responseTo: number;
-  opCode: number;
-};
-
-export type WireMessage = Omit<MessageHeader, 'opCode'> & ({
-  opCode: 1,
-  payload: ParsedOpReplyPayload;
-} | {
-  opCode: 2004;
-  payload: ParsedOpQueryPayload;
-} | {
-  opCode: 2013;
-  payload: ParsedOpMsgPayload;
-});
-
-export function buildOpReplyBuffer(payload: ParsedOpReplyPayload, replyTo: number) {
-  const bsonBytes = payload.documents.reduce((buf: Buffer, doc) => Buffer.concat([buf, BSON.serialize(doc)]), Buffer.alloc(0));
-  const responseFlags = Buffer.from([0x08, 0x00, 0x00, 0x00]);
-  const cursorID = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-  const startingFrom = Buffer.from([0x00, 0x00, 0x00, 0x00]);
-  const numberReturned = Buffer.from([0x01, 0x00, 0x00, 0x00]);
+function readNullTerminatedString(buf: Buffer, offset: number): {
+  s: string;
+  len: number; // including the null termination byte
+} {
+  const nullIndex = buf.indexOf(0, offset);
+  const s = buf.toString('utf-8', offset, nullIndex);
   
-  const responsePayload = Buffer.concat([responseFlags, cursorID, startingFrom, numberReturned, bsonBytes]);
-  const msgLen = 16 + responsePayload.length;
-
-  const messageHeader = Buffer.alloc(16);
-  messageHeader.writeInt32LE(msgLen, 0);
-  messageHeader.writeInt32LE(1, 4);
-  messageHeader.writeInt32LE(replyTo, 8);
-  messageHeader.writeInt32LE(1, 12);
-
-  return Buffer.concat([messageHeader, responsePayload]);
+  return {
+    s,
+    len: (nullIndex - offset) + 1
+  };
 }
 
-export function buildOpMsgBuffer(payload: ParsedOpMsgPayload, replyTo: number) {
-  const sectionsBytes = payload.sections.reduce((buf: Buffer, section) => {
-    switch(section.sectionKind) {
-      case 0: {
-        return Buffer.concat([buf, Buffer.from([0x00]), BSON.serialize(section.doc)]);
-      }
-      case 1: {
-        const docsBytes = section.docs.reduce((dbuf: Buffer, doc) => {
-          return Buffer.concat([dbuf, BSON.serialize(doc)]);
-        }, Buffer.alloc(0));
+function readBSONDocuments(buf: Buffer, offset: number): {
+  documents: BSON.Document[];
+  len: number; // bytes read
+} {
+  let documents: BSON.Document[] = [];
+  let pointer = offset;
 
-        const documentSequenceIdentifierBytes = Buffer.concat([
-          Buffer.from(section.documentSequenceIdentifier, 'utf-8'),
-          Buffer.from([0x00]),
-        ]);
-
-        const sectionSize = 4 + documentSequenceIdentifierBytes.length + sectionsBytes.length;
-        let sizeBytes = Buffer.alloc(4);
-        sizeBytes.writeInt32LE(sectionSize);
-
-        return Buffer.concat([
-          buf,
-          Buffer.from([0x01]),
-          sizeBytes,
-          documentSequenceIdentifierBytes,
-          docsBytes,
-        ]);
-      }
-      default:
-        return buf;
+  while (pointer < buf.length) {
+    if (buf.length - pointer < 4) break;
+    const size = buf.readInt32LE(pointer);
+    if (buf.length - pointer < size) break;
+    const docBuf = buf.subarray(pointer, pointer + size);
+    try {
+      const doc = BSON.deserialize(docBuf);
+      documents.push(doc);
+    } catch {
+      throw new Error('Invalid BSON at offset ' + pointer);
     }
+    pointer += size;
+  }
 
-  }, Buffer.alloc(0));
+  return {
+    documents,
+    len: pointer - offset,
+  }
+}
 
-  const flagBitsBytes = Buffer.alloc(4);
-  flagBitsBytes.writeInt32LE(payload.flagBits);
+export function encodeMessage({
+  header: {
+    requestID,
+    responseTo,
+    opCode,
+  },
+  payload,
+}: WireMessage) {
+  let payloadBuf: Buffer;
 
-  const messageSize = 16 + flagBitsBytes.length + sectionsBytes.length;
+  switch(payload._type) {
+    case 'OP_REPLY':
+      payloadBuf = encodeOpReplyPayload(payload);
+      break;
 
-  const messageHeader = Buffer.alloc(16);
-  messageHeader.writeInt32LE(messageSize, 0);
-  messageHeader.writeInt32LE(1, 4);
-  messageHeader.writeInt32LE(replyTo, 8);
-  messageHeader.writeInt32LE(2013, 12);
+    case 'OP_MSG':
+      payloadBuf = encodeOpMsgPayload(payload);
+      break;
+
+    default:
+      throw new Error(`Uknown opcode: ${payload._type}`)
+  } 
+
+  const headerBuf = Buffer.alloc(16);
+
+  const messageLength = headerBuf.length + payloadBuf.length;
+  headerBuf.writeInt32LE(messageLength, 0);
+  headerBuf.writeInt32LE(requestID, 4);
+  headerBuf.writeInt32LE(responseTo, 8);
+  headerBuf.writeInt32LE(opCode, 12);
+
+  return Buffer.concat([headerBuf, payloadBuf]);
+
+}
+
+function encodeOpReplyPayload(payload: OpReplyPayload): Buffer {
+  const {
+    responseFlags,
+    cursorID,
+    startingFrom,
+    numberReturned,
+    documents
+  } = payload;
+
+  const responseFlagsBytes = Buffer.alloc(4);
+  responseFlagsBytes.writeInt32LE(responseFlags);
+
+  const cursorIDBytes = Buffer.alloc(8);
+  cursorIDBytes.writeBigInt64LE(cursorID as bigint);
+
+  const startingFromBytes = Buffer.alloc(4);
+  startingFromBytes.writeInt32LE(startingFrom);
+
+  const numberReturnedBytes = Buffer.alloc(4);
+  numberReturnedBytes.writeInt32LE(numberReturned);
+
+  const documentsBytes = documents.reduce((buf: Buffer, doc) => Buffer.concat([buf, BSON.serialize(doc)]), Buffer.alloc(0))
 
   return Buffer.concat([
-    messageHeader,
+    responseFlagsBytes,
+    cursorIDBytes,
+    startingFromBytes,
+    numberReturnedBytes,
+    documentsBytes,
+  ]);  
+}
+
+function encodeOpMsgPayload(payload: OpMsgPayload): Buffer {
+  const {
+    flagBits,
+    sections,
+    checksum,
+  } = payload;
+
+  const flagBitsBytes = Buffer.alloc(4);
+  flagBitsBytes.writeInt32LE(flagBits);
+
+  const sectionsBytes = encodeOpMsgPayloadSections(sections);
+  
+  const checksumBytes = checksum !== undefined ? Buffer.alloc(4) : undefined;
+  checksumBytes && checksum !== undefined && checksumBytes.writeInt32LE(checksum);
+
+  return Buffer.concat([
     flagBitsBytes,
     sectionsBytes,
-  ]);
+    checksumBytes,
+  ].filter(Boolean as unknown as <T>(x: T | false | null | undefined) => x is T));
+}
 
+function encodeOpMsgPayloadSections(sections: OpMsgPayloadSection[]): Buffer {
+  let sectionsBytes = Buffer.alloc(0);
+
+  for (const section of sections) {
+    switch (section.sectionKind) {
+      case 0: {
+        const {
+          sectionKind,
+          document,
+        } = section;
+        const sectionKindBytes = Buffer.alloc(1);
+        sectionKindBytes.writeUint8(sectionKind);
+        
+        const documentBytes = BSON.serialize(document);
+
+        sectionsBytes = Buffer.concat([
+          sectionsBytes,
+          sectionKindBytes,
+          documentBytes,
+        ]);
+
+        break;
+      }
+
+      case 1: {
+        const {
+          sectionKind,
+          // size: will be calculated after encoding
+          documentSequenceIdentifier,
+          documents,
+        } = section;
+
+        const sectionKindBytes = Buffer.alloc(1);
+        sectionKindBytes.writeUint8(sectionKind);
+
+        const documentSequenceIdentifierBytes = Buffer.from(
+          documentSequenceIdentifier,
+          'utf-8'
+        );
+
+        const documentsBytes = documents.reduce((buf: Buffer, doc) =>
+          Buffer.concat([buf, BSON.serialize(doc)])
+        , Buffer.alloc(0));
+
+        const size = 4 + documentSequenceIdentifierBytes.length + documentsBytes.length;
+        const sizeBytes = Buffer.alloc(4);
+        sizeBytes.writeInt32LE(size);
+
+        sectionsBytes = Buffer.concat([
+          sectionsBytes,
+          sizeBytes,
+          documentSequenceIdentifierBytes,
+          documentsBytes
+        ]);
+      }
+    }
+  }
+
+  return sectionsBytes;
+}
+
+export function processBuffer(bufHolder: { buf: Buffer }) {
+  const buf = bufHolder.buf;
+  let offset = 0;
+  let messages: WireMessage[] = [];
+
+  // If the buffer has less than 4 bytes to read, we
+  // haven't received the messageLength field yet
+  while(buf.length - offset >= 4) {
+    const messageLength = buf.readInt32LE(offset);
+
+    // If the buffer has less than messageLenth bytes to read,
+    // wait till more bytes arrive
+    if (buf.length - offset < messageLength) break;
+
+    const messageBuf = buf.subarray(offset, offset + messageLength);
+
+    const message = decodeMessage(messageBuf);
+    messages.push(message);
+
+    offset += messageLength;
+
+    // Remove the processed bytes from the buffer
+    bufHolder.buf = buf.subarray(offset);
+  }
+  return messages;
 }
