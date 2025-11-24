@@ -1,5 +1,5 @@
 import { translateQueryToSQL } from "./find.js";
-import { parseFilterDoc } from "../frontend/query-parser/filter.js";
+import { parseFilterDoc } from "#frontend/query-parser/filter.js";
 
 const collection = process.argv[2];
 if (!collection) throw new Error('collection required');

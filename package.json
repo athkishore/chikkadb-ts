@@ -5,6 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "imports": {
+    "#backend/*": "./dist/backend/*",
+    "#frontend/*": "./dist/frontend/*",
+    "#shared/*": "./dist/shared/*"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

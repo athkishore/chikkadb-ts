@@ -15,7 +15,7 @@ export type WireMessage = {
     | OpMsgPayload;
 };
 
-type OpQueryPayload = {
+export type OpQueryPayload = {
   _type: 'OP_QUERY';
   flags: number;
   fullCollectionName: string;
@@ -25,7 +25,7 @@ type OpQueryPayload = {
   returnFieldsSelector?: BSON.Document | undefined;
 };
 
-type OpReplyPayload = {
+export type OpReplyPayload = {
   _type: 'OP_REPLY';
   responseFlags: number;
   cursorID: BigInt;
@@ -34,14 +34,14 @@ type OpReplyPayload = {
   documents: BSON.Document[];
 };
 
-type OpMsgPayload = {
+export type OpMsgPayload = {
   _type: 'OP_MSG';
   flagBits: number;
   sections: OpMsgPayloadSection[];
   checksum?: number;
 };
 
-type OpMsgPayloadSection = {
+export type OpMsgPayloadSection = {
   sectionKind: 0;
   document: BSON.Document;
 } | {

@@ -4,6 +4,11 @@
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
+    "paths": {
+      "#backend": ["./src/backend"],
+      "#frontend": ["./src/frontend"],
+      "#shared": ["./src/shared"]
+    },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module

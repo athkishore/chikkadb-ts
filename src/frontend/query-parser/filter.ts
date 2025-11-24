@@ -1,101 +1,22 @@
-type FilterDoc = Record<string, any>;
+import type { 
+  FilterDoc, 
+  FilterNodeIR,
+  FilterNodeIR_$eq,
+  FilterNodeIR_$gt,
+  FilterNodeIR_$gte,
+  FilterNodeIR_$lt,
+  FilterNodeIR_$lte,
+  FilterNodeIR_$ne, 
+} from "#shared/types.js";
 
-export type CanonicalNode = 
-  | CanonicalNode_DocLevel
-  | CanonicalNode_FieldLevel;
-
-export type CanonicalNode_DocLevel = 
-  | CanonicalNode_$and
-  | CanonicalNode_$or
-  | CanonicalNode_$nor;
-
-export type CanonicalNode_FieldLevel = 
-  | CanonicalNode_$eq
-  | CanonicalNode_$gt
-  | CanonicalNode_$gte
-  | CanonicalNode_$lt
-  | CanonicalNode_$lte
-  | CanonicalNode_$ne;
-
-type CanonicalNode_$and = {
-  operator: '$and';
-  operands: CanonicalNode[];
-};
-
-type CanonicalNode_$or = {
-  operator: '$or';
-  operands: CanonicalNode[];
-};
-
-type CanonicalNode_$nor = {
-  operator: '$nor';
-  operands: CanonicalNode[];
-};
-
-type CanonicalNode_$eq = {
-  operator: '$eq';
-  operands: [FieldReference, Value];
-};
-
-type CanonicalNode_$gt = {
-  operator: '$gt';
-  operands: [FieldReference, Value];
-};
-
-type CanonicalNode_$gte = {
-  operator: '$gte';
-  operands: [FieldReference, Value];
-};
-
-type CanonicalNode_$lt = {
-  operator: '$lt';
-  operands: [FieldReference, Value];
-};
-
-type CanonicalNode_$lte = {
-  operator: '$lte';
-  operands: [FieldReference, Value];
-};
-
-type CanonicalNode_$ne = {
-  operator: '$ne';
-  operands: [FieldReference, Value];
-};
-
-export type FieldReference = {
-  $ref: string;
-};
-
-export type Value = 
-  | string
-  | number
-  | boolean
-  | null
-  | Array<any>
-  | Object;
-
-export const FIELD_LEVEL_OPERATORS = [
-  '$eq',
-  '$gt',
-  '$gte',
-  '$lt',
-  '$lte',
-  '$ne',
-] as const;
-
-export const DOC_LEVEL_OPERATORS = [
-  '$and',
-  '$or',
-  '$nor',
-] as const;
 
 export function parseFilterDoc(
   filterDoc: FilterDoc, 
   { parentKey }: { parentKey: string | null }
-): [Error, null] | [null, CanonicalNode] {
+): [Error, null] | [null, FilterNodeIR] {
   try {
     const elements = Object.entries(filterDoc);
-    const parsedNodes: CanonicalNode[] = [];
+    const parsedNodes: FilterNodeIR[] = [];
     
     for (const [key, value] of elements) {
       const [error, node] = parseFilterElement(key, value, { parentKey });
@@ -119,7 +40,10 @@ export function parseFilterDoc(
   }
 }
 
-function parseFilterElement(key: string, value: any, { parentKey }: { parentKey: string | null }): [Error, null] | [null, CanonicalNode] {
+function parseFilterElement(
+  key: string, 
+  value: any, 
+  { parentKey }: { parentKey: string | null }): [Error, null] | [null, FilterNodeIR] {
   try {
     const isKeyOperator = /^\$/.test(key);
     const parser = parsers[key as keyof typeof parsers];
@@ -167,7 +91,7 @@ const parsers = {
     parse(
       value: any, 
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$eq] {
+    ): [Error, null] | [null, FilterNodeIR_$eq] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -188,7 +112,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$gt] {
+    ): [Error, null] | [null, FilterNodeIR_$gt] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -209,7 +133,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$gte] {
+    ): [Error, null] | [null, FilterNodeIR_$gte] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -230,7 +154,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$lt] {
+    ): [Error, null] | [null, FilterNodeIR_$lt] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -251,7 +175,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$lte] {
+    ): [Error, null] | [null, FilterNodeIR_$lte] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -272,7 +196,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode_$ne] {
+    ): [Error, null] | [null, FilterNodeIR_$ne] {
       try {
         const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
 
@@ -293,7 +217,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode] {
+    ): [Error, null] | [null, FilterNodeIR] {
       try {
         if (!Array.isArray(value)) {
           throw new Error('Array value required for $and');
@@ -309,7 +233,7 @@ const parsers = {
           throw new Error('$and cannot have a field reference as the parent key');
         }
 
-        const parsedNodes: CanonicalNode[] = [];
+        const parsedNodes: FilterNodeIR[] = [];
         for (const el of value) {
           const [error, node] = parseFilterDoc(el, { parentKey: '$and' });
           if (error) throw error;
@@ -335,7 +259,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode] {
+    ): [Error, null] | [null, FilterNodeIR] {
       try {
         if (!Array.isArray(value)) {
           throw new Error('Array value required for $or');
@@ -351,7 +275,7 @@ const parsers = {
           throw new Error('$or cannot have a field reference as the parent key');
         }
 
-        const parsedNodes: CanonicalNode[] = [];
+        const parsedNodes: FilterNodeIR[] = [];
         for (const el of value) {
           const [error, node] = parseFilterDoc(el, { parentKey: '$or' });
           if (error) throw error;
@@ -377,7 +301,7 @@ const parsers = {
     parse(
       value: any,
       { parentKey }: { parentKey: string | null }
-    ): [Error, null] | [null, CanonicalNode] {
+    ): [Error, null] | [null, FilterNodeIR] {
       try {
         if (!Array.isArray(value)) {
           throw new Error('Array value required for $nor');
@@ -393,7 +317,7 @@ const parsers = {
           throw new Error('$nor cannot have a field reference as the parent key');
         }
 
-        const parsedNodes: CanonicalNode[] = [];
+        const parsedNodes: FilterNodeIR[] = [];
         for (const el of value) {
           const [error, node] = parseFilterDoc(el, { parentKey: '$nor' });
           if (error) throw error;

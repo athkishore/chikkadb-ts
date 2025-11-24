@@ -1,5 +1,13 @@
 import config from "../config.js";
-import { DOC_LEVEL_OPERATORS, FIELD_LEVEL_OPERATORS, type CanonicalNode, type CanonicalNode_DocLevel, type CanonicalNode_FieldLevel, type FieldReference, type Value } from "../frontend/query-parser/filter.js";
+import { 
+  DOC_LEVEL_FILTER_OPERATORS, 
+  FIELD_LEVEL_FILTER_OPERATORS, 
+  type FilterNodeIR, 
+  type FilterNodeIR_DocLevel, 
+  type FilterNodeIR_FieldLevel, 
+  type FieldReference, 
+  type Value 
+} from "#shared/types.js";
 
 const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 
@@ -15,7 +23,7 @@ export function translateQueryToSQL({
   canonicalFilter,
 }: {
   collection: string;
-  canonicalFilter: CanonicalNode;
+  canonicalFilter: FilterNodeIR;
   // TODO: canonicalProjection, canonicalSort, etc.
 }) {
   const context: TranslationContext = {
@@ -59,20 +67,20 @@ WHERE EXISTS (
 // This function doesn't return any value but adds information
 // to canonicalFilter and context.
 function traverseFilterAndTranslateCTE(
-  canonicalFilter: CanonicalNode,
+  canonicalFilter: FilterNodeIR,
   context: TranslationContext,
 ) {
   const { operator, operands } = canonicalFilter;
 
   if (
     operator
-    && FIELD_LEVEL_OPERATORS.includes(operator as CanonicalNode_FieldLevel['operator'])
+    && FIELD_LEVEL_FILTER_OPERATORS.includes(operator as FilterNodeIR_FieldLevel['operator'])
   ) {
     const ref = (operands[0] as FieldReference).$ref;
     const value = operands[1] as Value;
     const sqlFragment = getLeafSqlFragment({
       conditionIndex: context.conditionCTEs.length,
-      operator: operator as CanonicalNode_FieldLevel['operator'],
+      operator: operator as FilterNodeIR_FieldLevel['operator'],
       ref,
       value,
     });
@@ -80,25 +88,25 @@ function traverseFilterAndTranslateCTE(
     (canonicalFilter as any).conditionIndex = context.conditionCTEs.length - 1;
   } else if (
     operator
-    && DOC_LEVEL_OPERATORS.includes(operator as CanonicalNode_DocLevel['operator'])
+    && DOC_LEVEL_FILTER_OPERATORS.includes(operator as FilterNodeIR_DocLevel['operator'])
   ) {
     for (const operand of operands) {
-      traverseFilterAndTranslateCTE(operand as CanonicalNode, context);
+      traverseFilterAndTranslateCTE(operand as FilterNodeIR, context);
     }
   }
 }
 
-function getWhereClauseFromAugmentedFilter(filterNode: CanonicalNode, context: TranslationContext): string {
+function getWhereClauseFromAugmentedFilter(filterNode: FilterNodeIR, context: TranslationContext): string {
   console.log(filterNode);
   if ((filterNode as any).conditionIndex !== undefined) {
     return `(c${(filterNode as any).conditionIndex} IS NOT NULL)`;
-  } else if ((filterNode as CanonicalNode_DocLevel).operator === '$and') {
+  } else if ((filterNode as FilterNodeIR_DocLevel).operator === '$and') {
     const fragments = filterNode.operands.map((op: any) => getWhereClauseFromAugmentedFilter(op, context));
     return `(${fragments.join(' AND ')})`;
-  } else if ((filterNode as CanonicalNode_DocLevel).operator === '$or') {
+  } else if ((filterNode as FilterNodeIR_DocLevel).operator === '$or') {
     const fragments = filterNode.operands.map((op: any) => getWhereClauseFromAugmentedFilter(op, context));
     return `(${fragments.join(' OR ')})`;
-  } else if ((filterNode as CanonicalNode_DocLevel).operator === '$nor') {
+  } else if ((filterNode as FilterNodeIR_DocLevel).operator === '$nor') {
     const fragments = filterNode.operands.map((op: any) => getWhereClauseFromAugmentedFilter(op, context));
     return `(NOT (${fragments.join(' OR ')}) )`;
   }
@@ -113,7 +121,7 @@ function getLeafSqlFragment({
   value,
 }: {
   conditionIndex: number;
-  operator: CanonicalNode_FieldLevel['operator'];
+  operator: FilterNodeIR_FieldLevel['operator'];
   ref: string;
   value: Value;
 }): string {
@@ -205,7 +213,7 @@ condition_${n} AS (
   return sqlFragment;
 }
 
-function getOperatorSqlFragment(operator: CanonicalNode_FieldLevel['operator']) {
+function getOperatorSqlFragment(operator: FilterNodeIR_FieldLevel['operator']) {
   switch(operator) {
     case '$eq': return '=';
     case '$gt': return '>';
