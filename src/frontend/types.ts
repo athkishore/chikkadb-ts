@@ -65,3 +65,7 @@ export type DeleteCommand = {
     limit?: number;
   }[];
 };
+
+
+
+export type CommandResponse = {};

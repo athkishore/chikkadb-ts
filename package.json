@@ -16,10 +16,12 @@
   "type": "module",
   "description": "",
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.9.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "better-sqlite3": "^12.4.6",
     "bson": "^6.10.4"
   }
 }

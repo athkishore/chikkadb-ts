@@ -87,3 +87,7 @@ export const DOC_LEVEL_FILTER_OPERATORS = [
   '$or',
   '$nor',
 ];
+
+
+export type QueryIR = {};
+export type ResultIR = {};
