@@ -8,6 +8,10 @@ export type MQLCommand =
   | BuildInfoCommand
   | GetParameterCommand
   | AggregateCommand
+  | PingCommand
+  | GetLogCommand
+  | HelloCommand
+  | EndSessionsCommand
 
 export type CreateCommand = {
   command: 'create';
@@ -70,12 +74,12 @@ export type DeleteCommand = {
 };
 
 export type BuildInfoCommand = {
-  command: 'buildInfo',
+  command: 'buildInfo';
   database: string;
 };
 
 export type GetParameterCommand = {
-  command: 'getParameter',
+  command: 'getParameter';
   database: string;
   featureCompatibilityVersion?: any;
 }
@@ -85,8 +89,28 @@ export type AggregateCommand = {
   database: string;
   pipeline: any[];
   cursor: any;
-}
+};
 
+export type PingCommand = {
+  command: 'ping';
+  database: string;
+};
+
+export type GetLogCommand = {
+  command: 'getLog';
+  database: string;
+  value: '*' | 'global' | 'startupWarnings';
+};
+
+export type HelloCommand = {
+  command: 'hello';
+  database: string;
+};
+
+export type EndSessionsCommand = {
+  command: 'endSessions';
+  database: string;
+}
 
 
 export type CommandResponse = {};

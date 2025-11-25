@@ -1,6 +1,7 @@
 import { Socket, createServer } from "net";
 import { encodeMessage, processBuffer, type WireMessage } from "../lib/wire.js";
 import { ObjectId } from "bson";
+import { getResponse } from "#frontend/command-handler/index.js";
 
 const HOST = '127.0.0.1';
 const PORT = 9000;
@@ -29,9 +30,8 @@ server.listen(PORT, () => {
 });
 
 async function getEncodedResponse(message: WireMessage): Promise<Buffer> {
-  // const response = await getResponse(message);
-  // const responseBuf = encodeMessage(response);
+  const response = await getResponse(message);
+  const responseBuf = encodeMessage(response);
 
-  // return responseBuf;
-  return Buffer.alloc(0);
+  return responseBuf;
 }
