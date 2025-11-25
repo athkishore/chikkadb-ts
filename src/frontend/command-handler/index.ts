@@ -49,6 +49,7 @@ export async function getResponse(message: WireMessage): Promise<WireMessage> {
     }
   } else if (opCode === 2013) {
     const responsePayload = await handleOpMsg(payload as OpMsgPayload);
+    console.log(responsePayload);
     if (responsePayload) {
       return {
         header: responseHeader,
@@ -83,8 +84,6 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
       ],
     };
   }
-
-  console.log(command);
 
   switch (command.command) {
     case 'buildInfo': {
@@ -199,9 +198,20 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
 
   const queryIR = generateQueryIRFromCommand(command);
   const resultIR = executeQueryIR(queryIR);
+
+  console.log(resultIR);
   
 
-  return undefined;
+  return {
+    _type: 'OP_MSG',
+    flagBits: 0,
+    sections: [
+      {
+        sectionKind: 0,
+        document: resultIR,
+      }
+    ]
+  };
 }
 
 function getCommandFromOpMsgBody(
