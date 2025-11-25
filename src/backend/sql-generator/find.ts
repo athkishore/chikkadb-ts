@@ -258,7 +258,7 @@ export function generateAndExecuteSQL_Find(command: FindCommandIR, db: Database)
   return { 
     cursor: {
       firstBatch: result.map(el => JSON.parse((el as any).doc)),
-      id: { $numberLong: '0' },
+      id: 0n,
       ns: `${database}.${collection}`,
     },
     ok: 1,
