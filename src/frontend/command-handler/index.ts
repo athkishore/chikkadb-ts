@@ -3,7 +3,6 @@ import { generateQueryIRFromCommand } from "#frontend/query-parser/index.js";
 import type { OpMsgPayload, OpMsgPayloadSection, WireMessage } from "#frontend/server/lib/wire.js";
 import type { CommandResponse, MQLCommand } from "#frontend/types.js";
 import { ObjectId } from "bson";
-import { isWritable } from "stream";
 
 export async function getResponse(message: WireMessage): Promise<WireMessage> {
   const { header, payload } = message;
@@ -266,6 +265,14 @@ function getCommandFromOpMsgBody(
         database: document.$db,
       };
     }
+
+    case 'create': {
+      return {
+        command: 'create',
+        database: document.$db,
+        collection: document.create,
+      };
+    }
   }
 }
 
@@ -277,4 +284,5 @@ const MONGODB_COMMANDS = [
   'getLog',
   'hello',
   'endSessions',
+  'create',
 ] as const;
