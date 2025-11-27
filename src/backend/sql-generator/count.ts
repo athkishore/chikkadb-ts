@@ -11,7 +11,7 @@ export function generateAndExecuteSQL_Count(command: CountCommandIR, db: Databas
   const result = stmt.get();
 
   return {
-    n: result,
+    n: Object.values(result as Object)[0],
     ok: 1,
   };
 }

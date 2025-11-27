@@ -29,6 +29,10 @@ export function translateQueryToSQL({
   canonicalFilter: FilterNodeIR;
   // TODO: canonicalProjection, canonicalSort, etc.
 }) {
+  if (canonicalFilter.operator === '$and' && canonicalFilter.operands.length === 0) {
+    return `SELECT c.doc FROM ${collection} c`;
+  }
+
   const context: TranslationContext = {
     conditionCTEs: [],
   };
