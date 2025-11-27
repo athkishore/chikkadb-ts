@@ -1,11 +1,13 @@
 import type { DeleteCommand } from "#frontend/types.js";
 import type { DeleteCommandIR } from "#shared/types.js";
-import { parseFilterDoc } from "./filter.js";
+import { parseFilterDoc } from "./common/filter.js";
 
 export function parseDeleteCommand(command: DeleteCommand): DeleteCommandIR {
   const { deletes } = command;
 
   const filter = deletes[0]?.q;
+
+  // TODO: Support multiple deletes
 
   if (!filter) throw new Error('Missing filter for delete');
 

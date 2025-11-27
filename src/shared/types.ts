@@ -90,10 +90,12 @@ export const DOC_LEVEL_FILTER_OPERATORS = [
 
 export const UPDATE_OPERATORS_FIELD = [
   '$set',
+  '$unset',
 ] as const;
 
 export type UpdateNodeIR = 
-  | UpdateNodeIR_$set;
+  | UpdateNodeIR_$set
+  | UpdateNodeIR_$unset;
 
 export type UpdateNodeIR_$set = {
   operator: '$set';
@@ -159,7 +161,7 @@ export type UpdateCommandIR = {
   collection: string;
   updates: {
     filter: FilterNodeIR;
-    update: UpdateNodeIR;
+    update: UpdateNodeIR[];
   }[];
 };
 
