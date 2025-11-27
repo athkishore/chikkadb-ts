@@ -1,9 +1,12 @@
+import { translateCommandToSQL } from "#backend/sql-generator/update.js";
 import type { UpdateCommand } from "#frontend/types.js";
 import { UPDATE_OPERATORS_FIELD, type FieldReference, type UpdateCommandIR, type UpdateNodeIR, type Value } from "#shared/types.js";
 import { parseFilterDoc } from "./common/filter.js";
 
 export function parseUpdateCommand(command: UpdateCommand): UpdateCommandIR {
   const { updates } = command;
+
+  console.log(command);
 
   const { q, u } = updates?.[0] ?? {};
 
@@ -78,16 +81,33 @@ function parseUpdateElement(key: string, value: any): [Error, null] | [null, Upd
   } 
 }
 
-const cmd: UpdateCommand = {
-  command: 'update',
-  database: 'test',
-  collection: 'users',
-  updates: [
-    {
-      q: { username: 'user1' },
-      u: { $set: { email: 'user1@example.org', name: 'User 1' } },
-    },
-  ],
-}
+// const cmd: UpdateCommand = {
+//   command: 'update',
+//   database: 'test',
+//   collection: 'users',
+//   updates: [
+//     {
+//       q: { username: 'user1' },
+//       u: { $set: { email: 'user1@example.org', name: 'User 1' } },
+//     },
+//   ],
+// }
 
-console.dir(parseUpdateCommand(cmd), { depth: null });
+// const cmdIR = parseUpdateCommand(cmd);
+
+// console.dir(cmdIR, { depth: null });
+
+// const {
+//   collection,
+//   updates
+// } = cmdIR;
+
+// const {
+//   filter,
+//   update
+// } = updates[0] ?? {};
+
+// if (!filter || !update) throw 'missing filter or update';
+
+// const sql = translateCommandToSQL({ collection, filter, update });
+// console.log(sql);

@@ -47,7 +47,7 @@ WHERE EXISTS (
 
 /* TODO: Standardize return type of generateAndExuteSQL functions */
 export function generateAndExecuteSQL_Delete(command: DeleteCommandIR, db: Database) {
-  const { collection, database, deletes } = command;
+  const { collection, deletes } = command;
 
   // validate and sanitize inputs
 

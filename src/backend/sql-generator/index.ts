@@ -7,6 +7,7 @@ import { getDatabases } from "#backend/database/index.js";
 import { generateAndExecuteSQL_ListCollections } from "./list-collections.js";
 import { generateAndExecuteSQL_Count } from "./count.js";
 import { generateAndExecuteSQL_Delete } from "./delete.js";
+import { generateAndExecuteSQL_Update } from "./update.js";
 
 export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database): any /* Add strong typing */ {
   switch (commandIR.command) {
@@ -28,6 +29,10 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
 
     case 'delete': {
       return generateAndExecuteSQL_Delete(commandIR, db);
+    }
+
+    case 'update': {
+      return generateAndExecuteSQL_Update(commandIR, db);
     }
 
     case 'listDatabases': {

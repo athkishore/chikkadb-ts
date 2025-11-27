@@ -171,7 +171,7 @@ function getOperatorSqlFragment(operator: FilterNodeIR_FieldLevel['operator']) {
   }
 }
 
-function getValueSqlFragment(value: Value) {
+export function getValueSqlFragment(value: Value) {
   if (typeof value === 'string') {
     return `'${value}'`;
   } else if (typeof value === 'number') {
