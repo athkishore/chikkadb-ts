@@ -430,7 +430,7 @@ function getCommandFromOpMsgBody(
       return {
         command: 'findAndModify',
         database: document.$db,
-        collection: document.collection,
+        collection: document.findAndModify,
         query: document.query,
         update: document.update,
       };

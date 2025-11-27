@@ -1,22 +1,10 @@
-import type { FilterNodeIR, UpdateCommandIR, UpdateNodeIR } from "#shared/types.js";
+import type { FilterNodeIR, FindAndModifyCommandIR, UpdateNodeIR } from "#shared/types.js";
 import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { getUpdateFragment } from "./common/update.js";
 
-
-export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Database) {
-  const { collection, updates } = command;
-
-  // TODO: validate and sanitize inputs
-  // TODO: Support multiple updates
-
-  const u = updates[0];
-  const { filter, update } = u ?? {};
-
-  console.log(command);
-
-  if (!filter) throw new Error('Missing filter for update');
-  if (!update) throw new Error('Missing update');
+export function generateAndExecuteSQL_FindAndModify(command: FindAndModifyCommandIR, db: Database) {
+  const { collection, filter, update } = command;
 
   const sql = translateCommandToSQL({ collection, filter, update });
 
@@ -31,7 +19,7 @@ export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Datab
   };
 }
 
-export function translateCommandToSQL({
+function translateCommandToSQL({
   collection,
   filter,
   update,
@@ -45,7 +33,7 @@ export function translateCommandToSQL({
   };
 
   traverseFilterAndTranslateCTE(filter, filterContext);
-  
+
   const { conditionCTEs } = filterContext;
 
   const whereClause = filter.operator === '$and' && filter.operands.length === 0
@@ -64,8 +52,6 @@ WHERE EXISTS (
     ${getWhereClauseFromAugmentedFilter(filter, filterContext)}
 )
 `;
-
-  
   const updateFragment = getUpdateFragment(update);
 
   let sql = `
@@ -73,6 +59,6 @@ UPDATE ${collection} AS c
 set doc = ${updateFragment}
 ${whereClause};
 `;
-  
+
   return sql;
 }

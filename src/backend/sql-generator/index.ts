@@ -8,6 +8,7 @@ import { generateAndExecuteSQL_ListCollections } from "./list-collections.js";
 import { generateAndExecuteSQL_Count } from "./count.js";
 import { generateAndExecuteSQL_Delete } from "./delete.js";
 import { generateAndExecuteSQL_Update } from "./update.js";
+import { generateAndExecuteSQL_FindAndModify } from "./find-and-modify.js";
 
 export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database): any /* Add strong typing */ {
   switch (commandIR.command) {
@@ -33,6 +34,10 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
 
     case 'update': {
       return generateAndExecuteSQL_Update(commandIR, db);
+    }
+
+    case 'findAndModify': {
+      return generateAndExecuteSQL_FindAndModify(commandIR, db);
     }
 
     case 'listDatabases': {
