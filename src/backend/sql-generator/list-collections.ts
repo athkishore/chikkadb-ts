@@ -13,5 +13,3 @@ type ListCollectionsCommandIR = {
   database: string;
   nameOnly?: boolean;
 }
-
-generateAndExecuteSQL_ListCollections({ command: 'listCollections', database: 'test' }, db);
