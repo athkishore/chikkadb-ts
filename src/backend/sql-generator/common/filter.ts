@@ -41,7 +41,6 @@ export function traverseFilterAndTranslateCTE(
 }
 
 export function getWhereClauseFromAugmentedFilter(filterNode: FilterNodeIR, context: TranslationContext): string {
-  console.log(filterNode);
   if ((filterNode as any).conditionIndex !== undefined) {
     return `(c${(filterNode as any).conditionIndex} IS NOT NULL)`;
   } else if ((filterNode as FilterNodeIR_DocLevel).operator === '$and') {
@@ -229,6 +228,10 @@ function getOperatorExpression(tblPrefix: string, operator: FilterNodeIR_FieldLe
     }
     case '$ne': {
       return value !== null ? `${tblPrefix}.value <> ${getValueSqlFragment(value)}` : `${tblPrefix}.type <> 'null'`;
+    }
+
+    case '$exists': {
+      return Boolean(value) ? `${tblPrefix}.type IS NOT NULL` : `${tblPrefix}.type IS NULL`;
     }
   }
 

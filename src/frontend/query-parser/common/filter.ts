@@ -2,6 +2,7 @@ import type {
   FilterDoc, 
   FilterNodeIR,
   FilterNodeIR_$eq,
+  FilterNodeIR_$exists,
   FilterNodeIR_$gt,
   FilterNodeIR_$gte,
   FilterNodeIR_$lt,
@@ -213,6 +214,33 @@ const parsers = {
       }
     }
   },
+
+  '$exists': {
+    parse(
+      value: any,
+      { parentKey }: { parentKey: string | null }
+    ): [Error, null] | [null, FilterNodeIR_$exists] {
+      try {
+        const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
+
+        if (!parentKey || isParentKeyOperator) {
+          throw new Error('$exists should have a field reference as the parent key');
+        }
+
+        if (typeof value !== 'boolean') {
+          throw new Error('$exists requires a boolean value');
+        }
+
+        return [null, {
+          operator: '$exists',
+          operands: [{ $ref: parentKey }, value]
+        }]
+      } catch (error) {
+        return [error as Error, null];
+      }
+    }
+  },
+
   '$and': {
     parse(
       value: any,

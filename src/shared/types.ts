@@ -15,7 +15,8 @@ export type FilterNodeIR_FieldLevel =
   | FilterNodeIR_$gte
   | FilterNodeIR_$lt
   | FilterNodeIR_$lte
-  | FilterNodeIR_$ne;
+  | FilterNodeIR_$ne
+  | FilterNodeIR_$exists;
 
 export type FilterNodeIR_$and = {
   operator: '$and';
@@ -62,6 +63,11 @@ export type FilterNodeIR_$ne = {
   operands: [FieldReference, Value];
 };
 
+export type FilterNodeIR_$exists = {
+  operator: '$exists';
+  operands: [FieldReference, boolean];
+};
+
 export type FieldReference = {
   $ref: string;
 };
@@ -80,6 +86,8 @@ export const FIELD_LEVEL_FILTER_OPERATORS = [
   '$lt',
   '$lte',
   '$ne',
+
+  '$exists',
 ] as const;
 
 export const DOC_LEVEL_FILTER_OPERATORS = [
