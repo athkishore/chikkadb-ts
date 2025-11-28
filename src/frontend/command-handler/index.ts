@@ -294,6 +294,8 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
   const queryIR = generateQueryIRFromCommand(command);
   const resultIR = executeQueryIR(queryIR);
 
+  delete resultIR['_type'];
+
   // TODO: Define strict types for responses of specific commands
 
   console.log(resultIR);

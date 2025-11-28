@@ -118,6 +118,9 @@ export type CommandIR =
   | ListDatabasesCommandIR
   | ListCollectionsCommandIR;
 
+export type CommandResult = 
+  | InsertCommandResult;
+
 export type FindCommandIR = {
   command: 'find';
   database: string;
@@ -148,6 +151,12 @@ export type InsertCommandIR = {
   database: string;
   collection: string;
   documents: Record<string, any>[];
+};
+
+export type InsertCommandResult = {
+  _type: 'insert';
+  ok: 0 | 1;
+  n: number;
 };
 
 export type CreateCommandIR = {

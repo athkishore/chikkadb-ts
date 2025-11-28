@@ -1,8 +1,9 @@
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 import { ObjectId } from "bson";
+import type { InsertCommandIR, InsertCommandResult } from "#shared/types.js";
 
-export function generateAndExecuteSQL_Insert(command: InsertCommandIR, db: Database) {
+export function generateAndExecuteSQL_Insert(command: InsertCommandIR, db: Database): InsertCommandResult {
   const { collection, documents } = command;
   
   const isCollectionNameValid = validateIdentifier(collection);
@@ -22,12 +23,11 @@ export function generateAndExecuteSQL_Insert(command: InsertCommandIR, db: Datab
     }
   });
 
-  return transaction(documents);
-}
+  transaction(documents);
 
-type InsertCommandIR = {
-  command: 'insert';
-  database: string;
-  collection: string;
-  documents: Record<string, any>[];
+  return {
+    _type: 'insert',
+    n: documents.length,
+    ok: 1,
+  };
 }
