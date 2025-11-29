@@ -406,7 +406,7 @@ function getCommandFromOpMsgBody(
         command: 'count',
         database: document.$db,
         collection: document.count,
-        filter: document.filter,
+        query: document.query ?? {},
       };
     }
 

@@ -54,7 +54,7 @@ export type CountCommand = {
   command: 'count';
   database: string;
   collection: string;
-  filter: Record<string, any>;
+  query: Record<string, any>;
   limit?: number;
   skip?: number;
 };

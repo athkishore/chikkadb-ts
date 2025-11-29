@@ -174,10 +174,31 @@ WHERE EXISTS (
 )
 `;
     } else if (segmentIdx > 0) {
-      sqlFragment = `\
+//       sqlFragment = `\
+// WHERE EXISTS (
+//   SELECT 1
+//   FROM ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS c${n}_p${segmentIdx} ${sqlFragment}
+// )      
+// `;
+
+    sqlFragment = `\
 WHERE EXISTS (
   SELECT 1
-  FROM ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS c${n}_p${segmentIdx} ${sqlFragment}
+  FROM (
+    SELECT
+      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+        WHEN 'array' THEN je.type
+        ELSE json_type(c${n}_p${segmentIdx - 1}.value)
+      END AS type,
+      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+        WHEN 'array' THEN je.value
+        ELSE json_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+      END AS value
+    FROM
+      (SELECT 1) AS dummy
+      LEFT JOIN ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS je
+        ON json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}') = 'array'
+  ) AS c${n}_p${segmentIdx} ${sqlFragment}
 )      
 `;
     } else {
