@@ -107,4 +107,21 @@ describe('find command', () => {
       }
     })
   });
+
+  describe('filters a document by a nested field inside an object', () => {
+    it('using $eq', () => {
+      const command: FindCommandIR = {
+        command: 'find',
+        database: 'test',
+        collection: seedCollections[0].collection,
+        filter: { operator: '$eq', operands: [{ $ref: 'address.city' }, 'Bangalore']},
+      };
+
+      const sqlResult = generateAndExecuteSQLFromQueryIR(command, db);
+      const sqlResultDocuments = sqlResult.cursor.firstBatch;
+
+      assert.equal(sqlResultDocuments.length, 1);
+      assert.equal(sqlResultDocuments[0].username, 'user1');
+    });
+  })
 })

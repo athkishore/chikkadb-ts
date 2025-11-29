@@ -10,7 +10,7 @@ function translateCommandToSQL({
   filterIR: FilterNodeIR;
 }) {
   if (filterIR.operator === '$and' && filterIR.operands.length === 0) {
-    return `DELETE FROM ${collection} c`;
+    return `DELETE FROM ${collection} AS c`;
   }
 
   const context: TranslationContext = {
