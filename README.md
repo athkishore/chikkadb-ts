@@ -4,11 +4,31 @@
 
 # Introduction
 
-ChikkaDB is a server application providing translation layer around [SQLite](https://sqlite.org/) that enables you to use SQLite as a MongoDB-compatible JSON database. You can connect to ChikkaDB using any of your favourite MongoDB clients or language drivers.
+ChikkaDB is a server application providing a translation layer around [SQLite](https://sqlite.org/) that enables you to use SQLite as a MongoDB-compatible JSON database. You can connect to ChikkaDB using any of your favourite MongoDB clients or language drivers.
 
 The name of the project is a tribute to the beautiful city of Bengaluru in the diverse southern Indian state of Karnataka, where this project was born. 'Chikka' in Kannada means 'small', 'little', 'young' (as in younger sibling), etc.
 
 The idea for this project is the result of my frustration at mongod being restricted to a narrow range of environments. For a while, I was hopeful that [FerretDB](https://www.ferretdb.com/) would fill the gap, but with v2 they have completely dropped the SQLite backend to focus on Postgres.
+
+# Get Started
+You will need a machine with nodejs installed. 
+
+1. Clone this repository
+```shell
+git clone git@github.com:athkishore/chikkadb-ts.git
+```
+
+2. Install dependencies
+```shell
+npm install
+```
+
+3. Start the ChikkaDB server. By default it will listen on port 9000, but you can override that using the `--port` CLI argument.
+```shell
+npm run serve --port 27017
+```
+
+Connect to ChikkaDB using your favourite MongoDB client and happy databasing!
 
 # Compatibility with MongoDB
 
