@@ -84,7 +84,7 @@ function getLeafSqlFragment({
       } else if (!isNaN(Number(arr[index - 1]))) {
         return [
           ...acc.slice(0, acc.length - 1),
-          `${acc[acc.length - 1]}${el}`,
+          `${acc[acc.length - 1]}.${el}`,
         ];
       } else {
         return [...acc, el];
@@ -142,17 +142,9 @@ condition_${n} AS (
   while (segment) {
     if (segmentIdx === segmentCount - 1) {
       sqlFragment = `\
-WHERE CASE c${n}_p${segmentIdx - 1}.key
-  WHEN '${segment}' THEN
-    CASE c${n}_p${segmentIdx - 1}.type
-      WHEN 'array' THEN EXISTS (
-        SELECT 1
-        FROM ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value) AS c${n}_p${segmentIdx}
-        WHERE c${n}_p${segmentIdx}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-      )
-      ELSE c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-    END
-  ELSE 0
+WHERE CASE typeof(c${n}_p${segmentIdx - 1}.key)
+  WHEN 'integer' THEN ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
+  ELSE c${n}_p${segmentIdx - 1}.key = '${segment}' AND c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
 END      
 `;
     } else if (segmentIdx > 0) {

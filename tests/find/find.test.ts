@@ -123,5 +123,21 @@ describe('find command', () => {
       assert.equal(sqlResultDocuments.length, 1);
       assert.equal(sqlResultDocuments[0].username, 'user1');
     });
-  })
+  });
+
+  describe('filters a document by a nested field in an array element', () => {
+    it('using $eq', () => {
+      const command: FindCommandIR = {
+        command: 'find',
+        database: 'test',
+        collection: seedCollections[0].collection,
+        filter: { operator: '$eq', operands: [{ $ref: 'phones.type' }, 'mobile'] },
+      };
+
+      const sqlResult = generateAndExecuteSQLFromQueryIR(command, db);
+      const sqlResultDocuments = sqlResult.cursor.firstBatch;
+
+      assert.equal(sqlResultDocuments.length, 2);
+    })
+  });
 })
