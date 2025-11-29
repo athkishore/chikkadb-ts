@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node --import tsx tests/index.ts",
     "build": "tsc -p tsconfig.build.json",
-    "serve": "node dist/src/frontend/server/cmd/server.js"
+    "serve": "node dist/src/server/cmd/server.js"
   },
   "imports": {
     "#src/*": "./dist/src/*",
