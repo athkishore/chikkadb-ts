@@ -185,10 +185,16 @@ WHERE EXISTS (
 // `;
 
     sqlFragment = `\
-WHERE EXISTS (
+WHERE (c${n}_p${segmentIdx - 1}.key = '${segment}' OR typeof(c${n}_p${segmentIdx - 1}.key) = 'integer') AND EXISTS (
   SELECT 1
   FROM (
-    ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+    ${JSON_TYPE}_each(
+      c${n}_p${segmentIdx - 1}.value,
+      CASE typeof(c${n}_p${segmentIdx - 1}.key) 
+        WHEN 'integer' THEN '$.${segment}'
+        ELSE '$'
+      END
+    )
   ) AS c${n}_p${segmentIdx} ${sqlFragment}
   LIMIT 1
 )      
