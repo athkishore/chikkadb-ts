@@ -1,10 +1,12 @@
 import { Socket, createServer } from "net";
 import { encodeMessage, processBuffer, type WireMessage } from "../lib/wire.js";
-import { ObjectId } from "bson";
 import { getResponse } from "#frontend/command-handler/index.js";
+import minimist from 'minimist';
+
+const argv = minimist(process.argv.slice(2));
 
 const HOST = '127.0.0.1';
-const PORT = 9000;
+const PORT = argv['port'] ?? 9000;
 
 const server = createServer(handleNewConnection);
 
