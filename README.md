@@ -16,7 +16,7 @@ ChikkaDB aims to implement a rich subset of the MongoDB commands that unlock the
 
 The ChikkaDB server is wire-compatible with `mongod`, so you can connect to ChikkaDB using any of your favourite MongoDB clients or language drivers.
 
-ChikkaDB looks at data from the lens of JSON, like SQLite does, so it doesn't aim for BSON-compatibility. There are significant differences, especially when it comes to comparison of values of different types, but these should not be a big issue in practicse. A lot of people use MongoDB simply as a JSON database, without being aware of the complexity of BSON types. In such cases, ChikkaDB could be a drop-in replacement.
+ChikkaDB looks at data from the lens of JSON, like SQLite does, so it doesn't aim for BSON-compatibility. There are significant differences, especially when it comes to comparison of values of different types, but these should not be a big issue in practice. A lot of people use MongoDB simply as a JSON database, without being aware of the complexity of BSON types. In such cases, ChikkaDB aspires to be a drop-in replacement.
 
 # Architecture
 
@@ -39,7 +39,7 @@ This design choice leaves room for extensions and variants in the future. For ex
 
 The first version will be written in Typescript (the only language I'm fluent in currently). The aim is to implement enough database commands to support basic CRUD functionality. Each document will be stored in a single JSON field in an SQLite table.
 
-If this turns out to be successful, I have a more ambitious plan of reimplementing the server in C (or more realistically Rust), to make it more performant. 
+If this turns out to be successful, I have a more ambitious plan of reimplementing the server in C (or more realistically Rust), to make it more performant. As it is, ChikkaDB only translates MongoDB commands to SQL and SQLite does all the heavy lifting, so performance shouldn't be much of an issue.
 
 A more detailed roadmap will be made available as the project evolves.
 
