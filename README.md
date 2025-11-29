@@ -11,7 +11,7 @@ The name of the project is a tribute to the beautiful city of Bengaluru in the d
 The idea for this project is the result of my frustration at mongod being restricted to a narrow range of environments. For a while, I was hopeful that [FerretDB](https://www.ferretdb.com/) would fill the gap, but with v2 they have completely dropped the SQLite backend to focus on Postgres.
 
 # Get Started
-Clone this repository a machine with nodejs installed. 
+Clone this repository a machine with [Node.js](https://nodejs.org) installed. 
 
 1. Install dependencies
 ```shell
