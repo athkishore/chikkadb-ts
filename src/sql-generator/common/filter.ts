@@ -156,21 +156,23 @@ WHERE EXISTS (
   SELECT 1
   FROM (
     SELECT
-      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-        WHEN 'array' THEN je.type
-        ELSE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+      CASE typeof(prev.key)
+        WHEN 'integer' THEN '${segment}'
+        ELSE prev.key
+      END as key,
+      CASE typeof(prev.key)
+        WHEN 'integer' THEN json_type(prev.value, '$.${segment}')
+        ELSE prev.type
       END AS type,
-      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-        WHEN 'array' THEN je.value
-        ELSE json_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+      CASE typeof(prev.key)
+        WHEN 'integer' THEN json_extract(prev.value, '$.${segment}')
+        ELSE prev.value
       END as value
     FROM
-      (SELECT 1) AS dummy
-      LEFT JOIN ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS je
-        ON json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}') = 'array'
+      (SELECT c${n}_p${segmentIdx - 1}.key as key, c${n}_p${segmentIdx - 1}.type as type, c${n}_p${segmentIdx - 1}.value) AS prev
   ) AS node
   WHERE
-    ${getOperatorExpression('node', operator, value)}
+    node.key = '${segment}' AND ${getOperatorExpression('node', operator, value)}
   LIMIT 1
 )
 `;
@@ -186,19 +188,7 @@ WHERE EXISTS (
 WHERE EXISTS (
   SELECT 1
   FROM (
-    SELECT
-      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-        WHEN 'array' THEN je.type
-        ELSE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-      END AS type,
-      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-        WHEN 'array' THEN je.value
-        ELSE json_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
-      END AS value
-    FROM
-      (SELECT 1) AS dummy
-      LEFT JOIN ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS je
-        ON json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}') = 'array'
+    ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
   ) AS c${n}_p${segmentIdx} ${sqlFragment}
   LIMIT 1
 )      
@@ -208,19 +198,7 @@ WHERE EXISTS (
 condition_${n} AS (
   SELECT 1 AS c${n}
   FROM (
-    SELECT 
-      CASE json_type(c.doc, '$.${segment}')
-        WHEN 'array' THEN je.type
-        ELSE json_type(c.doc, '$.${segment}')
-      END AS type,
-      CASE json_type(c.doc, '$.${segment}')
-        WHEN 'array' THEN je.value
-        ELSE ${JSON_TYPE}_extract(c.doc, '$.${segment}')
-      END AS value
-    FROM
-    (SELECT 1) AS dummy
-    LEFT JOIN ${JSON_TYPE}_each(c.doc, '$.${segment}') AS je
-      ON json_type(c.doc, '$.${segment}') = 'array'
+    ${JSON_TYPE}_each(c.doc, '$.${segment}')
   ) AS c${n}_p${segmentIdx} ${sqlFragment}
   LIMIT 1
 )      
