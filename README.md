@@ -1,4 +1,4 @@
-> This project is in the initial stages of development and is not yet functional. Feel free  to look around and play with the code.
+> This project is in the initial stages of development and is not yet stable. Feel free to [try it out](#get-started), or look around and play with the code.
 > 
 > You might also be interested in checking out the companion exploration packages at https://github.com/athkishore/chikkadb-journey
 
