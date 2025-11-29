@@ -13,7 +13,7 @@ The idea for this project is the result of my frustration at `mongod` being rest
 I would like to acknowledge [FerretDB](https://www.ferretdb.com/) as my main inspiration. I hadn't imagined myself embarking on such an ambitious project, but when FerretDB completely dropped the SQLite backend to focus on Postgres in their v2, I felt it might be fun to build something in that space.
 
 # Get Started
-Clone this repository a machine with [Node.js](https://nodejs.org) installed. 
+Clone this repository on a machine with [Node.js](https://nodejs.org) installed. 
 
 1. Install dependencies
 ```shell
