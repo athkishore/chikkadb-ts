@@ -141,11 +141,14 @@ condition_${n} AS (
 
   while (segment) {
     if (segmentIdx === segmentCount - 1) {
+//       sqlFragment = `\
+// WHERE CASE typeof(c${n}_p${segmentIdx - 1}.key)
+//   WHEN 'integer' THEN ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
+//   ELSE c${n}_p${segmentIdx - 1}.key = '${segment}' AND c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
+// END      
+// `;
       sqlFragment = `\
-WHERE CASE typeof(c${n}_p${segmentIdx - 1}.key)
-  WHEN 'integer' THEN ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-  ELSE c${n}_p${segmentIdx - 1}.key = '${segment}' AND c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-END      
+WHERE ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}   
 `;
     } else if (segmentIdx > 0) {
       sqlFragment = `\
@@ -158,7 +161,21 @@ WHERE EXISTS (
       sqlFragment = `\
 condition_${n} AS (
   SELECT 1 AS c${n}
-  FROM ${JSON_TYPE}_each(c.doc, '$.${segment}') AS c${n}_p${segmentIdx} ${sqlFragment}
+  FROM (
+    SELECT 
+      CASE json_type(c.doc, '$.${segment}')
+        WHEN 'array' THEN je.type
+        ELSE json_type(c.doc, '$.${segment}')
+      END AS type,
+      CASE json_type(c.doc, '$.${segment}')
+        WHEN 'array' THEN je.value
+        ELSE ${JSON_TYPE}_extract(c.doc, '$.${segment}')
+      END AS value
+    FROM
+    (SELECT 1) AS dummy
+    LEFT JOIN ${JSON_TYPE}_each(c.doc, '$.${segment}') AS je
+      ON json_type(c.doc, '$.${segment}') = 'array'
+  ) AS c${n}_p${segmentIdx} ${sqlFragment}
 )      
 `;
     }
