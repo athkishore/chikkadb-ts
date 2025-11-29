@@ -147,8 +147,31 @@ condition_${n} AS (
 //   ELSE c${n}_p${segmentIdx - 1}.key = '${segment}' AND c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
 // END      
 // `;
-      sqlFragment = `\
-WHERE ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}   
+//       sqlFragment = `\
+// WHERE ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}   
+// `;
+
+    sqlFragment = `\
+WHERE EXISTS (
+  SELECT 1
+  FROM (
+    SELECT
+      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+        WHEN 'array' THEN je.type
+        ELSE json_type(c${n}_p${segmentIdx - 1}.value)
+      END AS type,
+      CASE json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+        WHEN 'array' THEN je.value
+        ELSE json_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}')
+      END as value
+    FROM
+      (SELECT 1) AS dummy
+      LEFT JOIN ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS je
+        ON json_type(c${n}_p${segmentIdx - 1}.value, '$.${segment}') = 'array'
+  ) AS node
+  WHERE
+    ${getOperatorExpression('node', operator, value)}
+)
 `;
     } else if (segmentIdx > 0) {
       sqlFragment = `\
