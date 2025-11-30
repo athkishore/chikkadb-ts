@@ -59,7 +59,7 @@ describe('find command', () => {
     }
   });
 
-  describe('filters a document by top-level string field', () => {
+  describe('filters a document by top-level field', () => {
     describe('string', () => {
       it('using $eq', () => {
         const command: FindCommandIR = {

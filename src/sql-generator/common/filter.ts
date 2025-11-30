@@ -103,6 +103,10 @@ function getLeafSqlFragment({
 //   FROM (
 //     SELECT 
 //       CASE json_type(c.doc, '$.${segment}')
+//         WHEN 'array' THEN je.type
+//         ELSE json_type(c.doc, '$.${segment}')
+//       END AS type,
+//       CASE json_type(c.doc, '$.${segment}')
 //         WHEN 'array' THEN je.value
 //         ELSE json_extract(c.doc, '$.${segment}')
 //       END AS value
@@ -112,28 +116,21 @@ function getLeafSqlFragment({
 //         ON json_type(c.doc, '$.${segment}') = 'array'
 //   ) AS node
 //   WHERE 
-//     node.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
+//     ${getOperatorExpression('node', operator, value)}
 // )`;
-    sqlFragment = `\
+
+      sqlFragment = `\
 condition_${n} AS (
   SELECT 1 AS c${n}
   FROM (
     SELECT 
-      CASE json_type(c.doc, '$.${segment}')
-        WHEN 'array' THEN je.type
-        ELSE json_type(c.doc, '$.${segment}')
-      END AS type,
-      CASE json_type(c.doc, '$.${segment}')
-        WHEN 'array' THEN je.value
-        ELSE json_extract(c.doc, '$.${segment}')
-      END AS value
-      FROM
-      (SELECT 1) AS dummy
-      LEFT JOIN ${JSON_TYPE}_each(c.doc, '$.${segment}') AS je
-        ON json_type(c.doc, '$.${segment}') = 'array'
+      je.key AS key,
+      je.type AS type,
+      je.value AS value
+      FROM ${JSON_TYPE}_each(c.doc) AS je
   ) AS node
-  WHERE 
-    ${getOperatorExpression('node', operator, value)}
+  WHERE
+    node.key = '${segment}' AND (${getOperatorExpression('node', operator, value)})
 )`;
 
     return sqlFragment;
@@ -141,16 +138,6 @@ condition_${n} AS (
 
   while (segment) {
     if (segmentIdx === segmentCount - 1) {
-//       sqlFragment = `\
-// WHERE CASE typeof(c${n}_p${segmentIdx - 1}.key)
-//   WHEN 'integer' THEN ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-//   ELSE c${n}_p${segmentIdx - 1}.key = '${segment}' AND c${n}_p${segmentIdx - 1}.value ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}
-// END      
-// `;
-//       sqlFragment = `\
-// WHERE ${JSON_TYPE}_extract(c${n}_p${segmentIdx - 1}.value, '$.${segment}') ${getOperatorSqlFragment(operator)} ${getValueSqlFragment(value)}   
-// `;
-
     sqlFragment = `\
 WHERE EXISTS (
   SELECT 1
@@ -172,18 +159,11 @@ WHERE EXISTS (
       (SELECT c${n}_p${segmentIdx - 1}.key as key, c${n}_p${segmentIdx - 1}.type as type, c${n}_p${segmentIdx - 1}.value) AS prev
   ) AS node
   WHERE
-    node.key = '${segment}' AND ${getOperatorExpression('node', operator, value)}
+    node.key = '${segment}' AND (${getOperatorExpression('node', operator, value)})
   LIMIT 1
 )
 `;
     } else if (segmentIdx > 0) {
-//       sqlFragment = `\
-// WHERE EXISTS (
-//   SELECT 1
-//   FROM ${JSON_TYPE}_each(c${n}_p${segmentIdx - 1}.value, '$.${segment}') AS c${n}_p${segmentIdx} ${sqlFragment}
-// )      
-// `;
-
     sqlFragment = `\
 WHERE (c${n}_p${segmentIdx - 1}.key = '${segment}' OR typeof(c${n}_p${segmentIdx - 1}.key) = 'integer') AND EXISTS (
   SELECT 1
@@ -252,7 +232,17 @@ export function getValueSqlFragment(value: Value) {
 function getOperatorExpression(tblPrefix: string, operator: FilterNodeIR_FieldLevel['operator'], value: Value) {
   switch(operator) {
     case '$eq': {
-      return value !== null ? `${tblPrefix}.value = ${getValueSqlFragment(value)}` : `${tblPrefix}.type = 'null'`;
+      let s = '';
+
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE _je.value = ${getValueSqlFragment(value)}\n`;
+      s += `  ) OR ${tblPrefix}.value = ${getValueSqlFragment(value)}\n`;
+      s += `  ELSE ${value !== null ? `${tblPrefix}.value = ${getValueSqlFragment(value)}` : `${tblPrefix}.type = 'null'`}\n`;
+      s += `END\n`;
+      return s;
     }
     case '$gt': {
       return value !== null ? `${tblPrefix}.value > ${getValueSqlFragment(value)}` : `${tblPrefix}.value > -1e308`;
