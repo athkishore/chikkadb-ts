@@ -18,7 +18,7 @@ Currently no additional fields are supported.
 {
   "databases": [
     {
-      "name": "admin"
+      "name": <database name>
     },
     ...
   ],
@@ -26,5 +26,8 @@ Currently no additional fields are supported.
 }
 ```
 
+## Behaviour
+
 As of now, only the names of the databases are returned. It is as if `nameOnly` is set to true always. In the future, additional information might be added to conform better to the MongoDB behaviour.
 
+In ChikkaDB, `listDatabases` is just like any other command. It can be executed using `db.runCommand` in addition to `db.adminCommand`.
