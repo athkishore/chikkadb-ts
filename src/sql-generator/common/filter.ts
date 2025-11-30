@@ -134,8 +134,8 @@ WHERE EXISTS (
         ELSE prev.value
       END as value,
       CASE typeof(prev.key)
-        WHEN 'integer' THEN max(1) OVER ()
-        ELSE sum(prev.key = '${segment}') OVER ()
+        WHEN 'integer' THEN json_type(prev.value, '$.${segment}')
+        ELSE prev.key = '${segment}'
       END AS _exists
     FROM
       (SELECT c${n}_p${segmentIdx - 1}.key as key, c${n}_p${segmentIdx - 1}.type as type, c${n}_p${segmentIdx - 1}.value) AS prev

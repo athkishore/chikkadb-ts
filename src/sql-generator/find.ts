@@ -49,10 +49,9 @@ WHERE EXISTS (
   WITH
   ${conditionCTEs.join(',')}
   SELECT 1
+  FROM (SELECT 1)
   ${conditionCTEs.map((_, index) => {
-    return index === 0
-      ? `FROM condition_${index} c${index}`
-      : `FULL OUTER JOIN condition_${index} c${index} ON 1=1`;
+    return `FULL OUTER JOIN condition_${index} c${index} ON 1=1`;
   }).join('\n')}
   WHERE
     ${whereFragment}

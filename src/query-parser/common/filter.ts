@@ -231,10 +231,13 @@ const parsers = {
           throw new Error('$exists requires a boolean value');
         }
 
-        return [null, {
+        return value === true ? [null, {
           operator: '$exists',
           operands: [{ $ref: parentKey }, value]
-        }]
+        }] : [null, {
+          operator: '$nor',
+          operands: [{ operator: '$exists', operands: [{ $ref: parentKey }, true]}]
+        }] as any; // TODO: Find a better solution to this workaround
       } catch (error) {
         return [error as Error, null];
       }
