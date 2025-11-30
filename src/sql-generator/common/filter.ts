@@ -1,5 +1,3 @@
-// This function doesn't return any value but adds information
-
 import config from "#src/config.js";
 import { DOC_LEVEL_FILTER_OPERATORS, FIELD_LEVEL_FILTER_OPERATORS, type FieldReference, type FilterNodeIR, type FilterNodeIR_DocLevel, type FilterNodeIR_FieldLevel, type Value } from "../../types.js";
 
@@ -9,6 +7,7 @@ export type TranslationContext = {
 
 const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 
+// This function doesn't return any value but adds information
 // to canonicalFilter and context.
 export function traverseFilterAndTranslateCTE(
   canonicalFilter: FilterNodeIR,
@@ -242,7 +241,7 @@ function getOperatorExpression(tblPrefix: string, segment: string, operator: Fil
     }
     case '$ne': {
       return value !== null 
-        ? `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value <> ${getValueSqlFragment(value)}` : `${tblPrefix}.type <> 'null'`;
+        ? `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value <> ${getValueSqlFragment(value)}` : `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.type <> 'null'`;
     }
 
     case '$exists': {

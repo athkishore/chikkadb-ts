@@ -142,24 +142,24 @@ const suite: Suite = {
             *   In MongoDB, it also returns documents where
             *   the field doesn't exist
             */
-            // {
-            //   type: 'test',
-            //   name: 'using $eq',
-            //   input: {
-            //     filter: { homepage: null },
-            //   },
-            //   expect: result => result.length === 1
-            //     && result[0]!.username === 'user1',
-            // },
-            // {
-            //   type: 'test',
-            //   name: 'using $ne',
-            //   input: {
-            //     filter: { homepage: { $ne: null } },
-            //   },
-            //   expect: result => result.length === 1
-            //     && result[0]!.username === 'user2',
-            // }
+            {
+              type: 'test',
+              name: 'using $eq',
+              input: {
+                filter: { homepage: null },
+              },
+              expect: result => result.length === 1
+                && result[0]!.username === 'user1',
+            },
+            {
+              type: 'test',
+              name: 'using $ne',
+              input: {
+                filter: { homepage: { $ne: null } },
+              },
+              expect: result => result.length === 1
+                && result[0]!.username === 'user2',
+            }
           ]
         },
         {
