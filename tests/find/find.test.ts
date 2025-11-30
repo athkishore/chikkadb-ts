@@ -162,18 +162,18 @@ const suite: Suite = {
             }
           ]
         },
-        // {
-        //   type: 'suite',
-        //   name: 'using $exists',
-        //   children: [
-        //     {
-        //       type: 'test',
-        //       name: 'field exists',
-        //       input: {
-        //         filter: { homepage: { $exists: true } },
-        //       },
-        //       expect: result => result.length === 2,
-        //     },
+        {
+          type: 'suite',
+          name: 'using $exists',
+          children: [
+            {
+              type: 'test',
+              name: 'field exists',
+              input: {
+                filter: { homepage: { $exists: true } },
+              },
+              expect: result => result.length === 2,
+            },
         //     {
         //       type: 'test',
         //       name: 'field does not exist',
@@ -182,8 +182,8 @@ const suite: Suite = {
         //       },
         //       expect: result => result.length === 1,
         //     },
-        //   ],
-        // }
+          ],
+        }
       ]
     },
     {
