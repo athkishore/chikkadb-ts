@@ -5,7 +5,7 @@ import assert from "assert";
 import Database from "better-sqlite3";
 import { ObjectId } from "bson";
 import fs from 'fs';
-import { before, describe, it } from "node:test";
+import { after, before, describe, it } from "node:test";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -355,3 +355,7 @@ function executeSuite(suite: Suite) {
 }
 
 executeSuite(suite);
+
+after(() => {
+  db.close();
+});

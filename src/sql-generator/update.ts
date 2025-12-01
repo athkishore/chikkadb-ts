@@ -5,7 +5,7 @@ import { getUpdateFragment } from "./common/update.js";
 
 
 export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Database) {
-  const { collection, updates } = command;
+  const { collection, updates, database } = command;
 
   // TODO: validate and sanitize inputs
   // TODO: Support multiple updates
@@ -23,10 +23,14 @@ export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Datab
   console.log(sql);
 
   const stmt = db.prepare(sql);
-  const result = stmt.run();
+  const result = stmt.all();
 
-  console.log(result);
   return {
+    cursor: {
+      firstBatch: result.map(el => JSON.parse((el as any).doc)),
+      id: 0n,
+      ns: `${database}.${collection}`,
+    },
     ok: 1,
   };
 }
@@ -71,7 +75,8 @@ WHERE EXISTS (
   let sql = `
 UPDATE ${collection} AS c
 set doc = ${updateFragment}
-${whereClause};
+${whereClause}
+RETURNING doc;
 `;
   
   return sql;

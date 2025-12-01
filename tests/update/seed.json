@@ -1,0 +1,66 @@
+[
+  {
+    "collection": "users",
+    "documents": [
+      {
+        "username": "user1",
+        "email": "user1@example.org",
+        "active": true,
+        "homepage": null,
+        "age": 25,
+        "follows": ["user3", "user2"],
+        "phones": [
+          {
+            "type": "mobile",
+            "number": "9876543210"
+          },
+          {
+            "type": "landline",
+            "number": "080-123456"
+          }
+        ],
+        "address": {
+          "doorNo": 100,
+          "street": "Park Street",
+          "city": "Bangalore",
+          "pin": 560001
+        }
+      },
+      {
+        "username": "user2",
+        "email": "user2@example.org",
+        "active": false,
+        "homepage": "https://user2.example.org",
+        "age": 37,
+        "follows": [],
+        "phones": [
+          {
+            "type": "mobile",
+            "number": "876543210"
+          }
+        ],
+        "address": {
+          "doorNo": 35,
+          "street": "Church Street",
+          "city": "New Delhi"
+        }
+      },
+      {
+        "username": "user3",
+        "email": "user3@example.org",
+        "active": false,
+        "follows": ["user2"],
+        "age": 43,
+        "phones": [
+          
+        ],
+        "address": {
+          "doorNo": 123,
+          "street": "Market Street",
+          "city": "Mumbai",
+          "pin": 400001
+        }
+      }
+    ]
+  }
+]
