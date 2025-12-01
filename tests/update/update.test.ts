@@ -72,8 +72,27 @@ const suite: Suite = {
             return result.length === 1
               && result[0]!.username === 'user1'
               && result[0]!.email === 'user1.new@example.org';
-          }
-        }
+          },
+        },
+        {
+          type: 'test',
+          name: 'multiple fields in $set',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                x: 'foo',
+                y: 'bar',
+              },
+            },
+          },
+          expect: (result) => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.x === 'foo'
+              && result[0]!.y === 'bar';
+          },
+        },
       ]
     },
     {
@@ -95,6 +114,25 @@ const suite: Suite = {
             return result.length === 1
               && result[0]!.username === 'user1'
               && result[0]!.address.street === 'Sankey Road';
+          }
+        },
+        {
+          type: 'test',
+          name: 'mutiple fields in $set',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                'address.x': 'foo',
+                'address.y': 'bar',
+              },
+            },
+          },
+          expect: (result) => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.address.x === 'foo'
+              && result[0]!.address.y === 'bar';
           }
         }
       ]
