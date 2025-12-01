@@ -10,7 +10,7 @@ Reference: https://www.mongodb.com/docs/manual/reference/command/count
 ```
 `limit` and `skip` will be added later.
 
-See [Filter Operators](../operators/filter-operators.md) to find out which query operators are supported.
+See [Filter](../operators/filter.md) to find out which query formats and filter operators are supported.
 
 ## Result Format
 
