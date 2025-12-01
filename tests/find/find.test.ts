@@ -151,6 +151,52 @@ const suite: Suite = {
             },
             {
               type: 'test',
+              name: 'primitive value - using $gt',
+              input: {
+                filter: { follows: { $gt: 'user2' } },
+              },
+              expect: result => result.length === 1
+                && result[0]!.username === 'user1',
+            },
+            {
+              type: 'test',
+              name: 'primitive value - using $gte',
+              input: {
+                filter: { follows: { $gte: 'user2' } }
+              },
+              expect: result => result.length === 2,
+            },
+            {
+              type: 'test',
+              name: 'primitive value - using $lt',
+              input: {
+                filter: { follows: { $lt: 'user2' } },
+              },
+              expect: result => result.length === 0,
+            },
+            {
+              type: 'test',
+              name: 'primitive value - using $lte',
+              input: {
+                filter: { follows: { $lte: 'user2' } },
+              },
+              expect: result => result.length === 2,
+            },
+            // {
+            //   type: 'test',
+            //   name: 'primitive value - using $ne',
+            //   input: {
+            //     filter: { follows: { $ne: 'user3' } },
+            //   },
+            //   expect: result => {
+            //     const usernames = result.map(el => el.username);
+            //     return usernames.length === 2
+            //       && usernames.includes('user2')
+            //       && usernames.includes('user3');
+            //   },
+            // },
+            {
+              type: 'test',
               name: 'array value - using $eq - returns exact match',
               input: {
                 filter: { follows: ['user3', 'user2'] }

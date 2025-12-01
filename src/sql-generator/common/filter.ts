@@ -228,24 +228,72 @@ function getOperatorExpression(tblPrefix: string, segment: string, operator: Fil
       return s;
     }
     case '$gt': {
-      return value !== null 
-        ? `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value > ${getValueSqlFragment(value)}` 
-        : `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value > -1e308`;
+      let s = '';
+
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE _je.value > ${value !== null ? getValueSqlFragment(value) : -1e308}\n`;
+      s += `  ) OR ${tblPrefix}.value > ${value !== null ? getValueSqlFragment(value) : -1e308}\n`;
+      s += `  ELSE ${value !== null ? `${tblPrefix}.value > ${getValueSqlFragment(value)}` : `${tblPrefix}.value > -1e308`}\n`;
+      s += `END\n`;
+
+      return s;
     }
     case '$gte': {
-      return value !== null 
-        ? `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value >= ${getValueSqlFragment(value)}` 
-        : `${tblPrefix}.key = '${segment} AND '${tblPrefix}.value >= -1e308`;
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE _je.value >= ${value !== null ? getValueSqlFragment(value) : -1e308}\n`;
+      s += `  )\n`;
+      s += `  ELSE ${tblPrefix}.value >= ${value !== null ? getValueSqlFragment(value) : -1e308}\n`;
+      s += `END\n`;
+
+      return s;
     }
     case '$lt': {
-      return `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value < ${getValueSqlFragment(value)}`;
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE _je.value < ${getValueSqlFragment(value)}\n`;
+      s += `  )\n`;
+      s += `  ELSE ${tblPrefix}.value < ${getValueSqlFragment(value)}\n`;
+      s += `END\n`;
+      return s;
     }
     case '$lte': {
-      return `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value <= ${getValueSqlFragment(value)}`;
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE _je.value <= ${getValueSqlFragment(value)}\n`;
+      s += `  )\n`;
+      s += `  ELSE ${tblPrefix}.value <= ${getValueSqlFragment(value)}\n`;
+      s += `END\n`;
+      return s;
     }
     case '$ne': {
-      return value !== null 
-        ? `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.value <> ${getValueSqlFragment(value)}` : `${tblPrefix}.key = '${segment}' AND ${tblPrefix}.type <> 'null'`;
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN NOT EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE ${value !== null ? `${tblPrefix}.value = ${getValueSqlFragment(value)}` : `${tblPrefix}.type = 'null'`}\n`;
+      s += `  )\n`;
+      s += `  ELSE ${value !== null ? `${tblPrefix}.value <> ${getValueSqlFragment(value)}` : `${tblPrefix}.type <> 'null'`}\n`;
+      s += `END\n`;
+      return s;
     }
 
     case '$exists': {
