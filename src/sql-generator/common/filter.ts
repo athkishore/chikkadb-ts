@@ -296,6 +296,37 @@ function getOperatorExpression(tblPrefix: string, segment: string, operator: Fil
       return s;
     }
 
+    case '$in': {
+      if (!Array.isArray(value)) throw new Error('$in requires array value');
+
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN NOT EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `    WHERE ${tblPrefix}.value IN (${value.map(el => getValueSqlFragment(el)).join(', ')})`;
+      s += `  )\n`;
+      s += `  ELSE ${tblPrefix}.value IN (${value.map(el => getValueSqlFragment(el)).join(', ')})`;
+      s += `END\n`;
+      return s;
+    }
+
+    case '$nin': {
+      if (!Array.isArray(value)) throw new Error('$nin requires array value');
+
+      let s = '';
+      s += `${tblPrefix}.key = '${segment}' AND \n`;
+      s += `CASE ${tblPrefix}.type\n`;
+      s += `  WHEN 'array' THEN NOT EXISTS(\n`;
+      s += `    SELECT 1\n`;
+      s += `    FROM ${JSON_TYPE}_each(${tblPrefix}.value) AS _je\n`;
+      s += `  )\n`;
+      s += `  ELSE ${tblPrefix}.value NOT IN (${value.map(el => getValueSqlFragment(el)).join(', ')})`;
+      s += `END\n`;
+      return s;
+    }
+
     case '$exists': {
       return Boolean(value) ? `${tblPrefix}._exists > 0` : `${tblPrefix}._exists = 0`;
     }

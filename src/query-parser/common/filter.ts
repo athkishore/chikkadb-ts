@@ -6,9 +6,11 @@ import {
   type FilterNodeIR_$exists,
   type FilterNodeIR_$gt,
   type FilterNodeIR_$gte,
+  type FilterNodeIR_$in,
   type FilterNodeIR_$lt,
   type FilterNodeIR_$lte,
   type FilterNodeIR_$ne,
+  type FilterNodeIR_$nin,
   type FilterNodeIR_$nor, 
 } from "../../types.js";
 
@@ -215,6 +217,59 @@ const parsers = {
         return [error as Error, null];
       }
     }
+  },
+  '$in': {
+    parse(
+      value: any,
+      { parentKey }: { parentKey: string | null }
+    ): [Error, null] | [null, FilterNodeIR_$in] {
+      try {
+        const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
+
+        if (!parentKey || (isParentKeyOperator && parentKey !== '$not')) {
+          throw new Error('$in should have a field reference or $not as the parent key')
+        }
+
+        if (!Array.isArray(value)) {
+          throw new Error('$in requires an array value');
+        }
+
+        return [null, {
+          operator: '$in',
+          operands: [{ $ref: parentKey }, value],
+        }];
+      } catch (error) {
+        return [error as Error, null];
+      }
+    },
+  },
+
+  '$nin': {
+    parse(
+      value: any,
+      { parentKey }: { parentKey: string | null }
+    ): [Error, null] | [null, FilterNodeIR_$nin] {
+      try {
+        const isParentKeyOperator = parentKey ? /^\$/.test(parentKey) : false;
+
+        if (!parentKey || (isParentKeyOperator && parentKey !== '$not')) {
+          throw new Error('$nin should have a field reference or $not as the parent key');
+        }
+
+        if (!Array.isArray(value)) {
+          throw new Error('$nin requires an array value');
+        }
+
+        return [
+          null, {
+            operator: '$nin',
+            operands: [{ $ref: parentKey }, value],
+          }
+        ];
+      } catch (error) {
+        return [error as Error, null];
+      }
+    },
   },
 
   '$exists': {

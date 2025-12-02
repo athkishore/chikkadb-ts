@@ -134,6 +134,28 @@ const suite: Suite = {
                   && usernames.includes('user1')
                   && usernames.includes('user3');
               },
+            },
+            {
+              type: 'test',
+              name: 'using $in',
+              input: {
+                filter: { username: { $in: ['user1', 'user2'] } },
+              },
+              expect: result => {
+                const usernames = result.map(el => el.username);
+                return usernames.length === 2
+                  && usernames.includes('user1')
+                  && usernames.includes('user2');
+              },
+            },
+            {
+              type: 'test',
+              name: 'using $nin',
+              input: {
+                filter: { username: { $nin: ['user1', 'user2'] } },
+              },
+              expect: result => result.length === 1
+                && result[0]!.username === 'user3',
             }
           ]
         },

@@ -172,6 +172,8 @@ export type FilterNodeIR_FieldLevel =
   | FilterNodeIR_$lt
   | FilterNodeIR_$lte
   | FilterNodeIR_$ne
+  | FilterNodeIR_$in
+  | FilterNodeIR_$nin
   | FilterNodeIR_$exists
   | FilterNodeIR_$not;
 
@@ -225,6 +227,16 @@ export type FilterNodeIR_$ne = {
   operands: [FieldReference, Value];
 };
 
+export type FilterNodeIR_$in = {
+  operator: '$in';
+  operands: [FieldReference, Array<any>];
+};
+
+export type FilterNodeIR_$nin = {
+  operator: '$nin';
+  operands: [FieldReference, Array<any>]
+}
+
 export type FilterNodeIR_$exists = {
   operator: '$exists';
   operands: [FieldReference, boolean];
@@ -248,6 +260,8 @@ export const FIELD_LEVEL_FILTER_OPERATORS = [
   '$lt',
   '$lte',
   '$ne',
+  '$in',
+  '$nin',
 
   '$exists',
 
@@ -277,7 +291,7 @@ export type UpdateNodeIR_$set = {
 export type UpdateNodeIR_$unset = {
   operator: '$unset';
   operandsArr: [FieldReference, Value][];
-}
+};
 
 export type CommandIR = 
   | FindCommandIR
