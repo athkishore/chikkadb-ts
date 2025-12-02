@@ -148,7 +148,7 @@ const suite: Suite = {
         },
         {
           type: 'test',
-          name: 'creates parent object field if it does not exist',
+          name: 'creates parent object of nested field if it does not exist',
           input: {
             filter: { username: 'user1' },
             update: {
@@ -164,7 +164,52 @@ const suite: Suite = {
               && result[0]!.obj.x === 1;
           }
         },
-      ]
+        /**
+         * This behaviour is different from MongoDB
+         * It creates an object and sets key 0 to the value
+         * ChikkaDB creates an array and sets first element to value
+         */
+        {
+          type: 'test',
+          name: 'creates parent array of index if it does not exist - only if index is 0',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                'arr.0': 1,
+                'arr2.1': 10,
+              },
+            },
+          },
+          expect: result => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.arr && result[0]!.arr[0] === 1
+              && !result[0]!.arr2;
+          }
+        },
+        /**
+         * MongoDB returns an error while
+         * ChikkaDB doesn't since SQLite json_set silently ignores it
+         */
+        {
+          type: 'test',
+          name: 'does not set a nested field if parent is a primitive',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                'obj.x.y': 2,
+              },
+            },
+          },
+          expect: (result) => {
+            return result.length === 1
+              && typeof result[0]!.obj.x === 'number'
+              && result[0]!.obj.x === 1;
+          },
+        },
+      ],
     },
     {
       type: 'suite',
