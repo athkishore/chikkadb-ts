@@ -55,11 +55,11 @@ const suite: Suite = {
   children: [
     {
       type: 'suite',
-      name: 'updates top-level fields',
+      name: 'operator $set',
       children: [
         {
           type: 'test',
-          name: 'using $set',
+          name: 'updates existing top-level field',
           input: {
             filter: { username: 'user1' },
             update: {
@@ -76,7 +76,24 @@ const suite: Suite = {
         },
         {
           type: 'test',
-          name: 'multiple fields in $set',
+          name: 'creates new top-level field',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                testField: 'value',
+              },
+            },
+          },
+          expect: (result) => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.testField === 'value';
+          },
+        },
+        {
+          type: 'test',
+          name: 'sets multiple top-level fields',
           input: {
             filter: { username: 'user1' },
             update: {
@@ -95,31 +112,7 @@ const suite: Suite = {
         },
         {
           type: 'test',
-          name: 'using $unset',
-          input: {
-            filter: { username: 'user1' },
-            update: {
-              $unset: {
-                active: null,
-              },
-            },
-          },
-          expect: (result, originalDocs) => {
-            console.log(result, originalDocs);
-            return result.length === 1
-              && result[0]!.username === 'user1'
-              && result[0]!.active === undefined;
-          }
-        }
-      ]
-    },
-    {
-      type: 'suite',
-      name: 'updates nested field inside object',
-      children: [
-        {
-          type: 'test',
-          name: 'using $set',
+          name: 'updates existing nested field inside object',
           input: {
             filter: { username: 'user1' },
             update: {
@@ -136,7 +129,7 @@ const suite: Suite = {
         },
         {
           type: 'test',
-          name: 'mutiple fields in $set',
+          name: 'sets multiple fields inside object',
           input: {
             filter: { username: 'user1' },
             update: {
@@ -152,7 +145,48 @@ const suite: Suite = {
               && result[0]!.address.x === 'foo'
               && result[0]!.address.y === 'bar';
           }
-        }
+        },
+        {
+          type: 'test',
+          name: 'creates parent object field if it does not exist',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $set: {
+                'obj.x': 1,
+              },
+            },
+          },
+          expect: result => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.obj
+              && result[0]!.obj.x === 1;
+          }
+        },
+      ]
+    },
+    {
+      type: 'suite',
+      name: 'operator $unset',
+      children: [
+        {
+          type: 'test',
+          name: 'removes existing top-level field',
+          input: {
+            filter: { username: 'user1' },
+            update: {
+              $unset: {
+                active: null,
+              },
+            },
+          },
+          expect: (result) => {
+            return result.length === 1
+              && result[0]!.username === 'user1'
+              && result[0]!.active === undefined;
+          }
+        },
       ]
     }
   ]
