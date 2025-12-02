@@ -341,6 +341,96 @@ const suite: Suite = {
               && usernames.includes('user2')
               && usernames.includes('user3');
           },
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $ne',
+          input: {
+            filter: {
+              age: { $not: { $ne: 25 } },
+            },
+          },
+          expect: result => 
+            result.length === 1
+            && result[0]!.username === 'user1',
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $gt',
+          input: {
+            filter: {
+              age: { $not: { $gt: 37 } },
+            },
+          },
+          expect: result => {
+            const usernames = result.map(u => u.username);
+            return usernames.length === 2
+              && usernames.includes('user1')
+              && usernames.includes('user2');
+          },
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $gte',
+          input: {
+            filter: {
+              age: { $not: { $gte: 37 } },
+            },
+          },
+          expect: result => result.length === 1
+            && result[0]!.username === 'user1',
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $lt',
+          input: {
+            filter: {
+              age: { $not: { $lt: 37 } },
+            },
+          },
+          expect: result => {
+            const usernames = result.map(u => u.username);
+            return usernames.length === 2
+              && usernames.includes('user2')
+              && usernames.includes('user3');
+          },
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $lte',
+          input: {
+            filter: {
+              age: { $not: { $lte: 37 } },
+            },
+          },
+          expect: result => result.length === 1
+            && result[0]!.username === 'user3',
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $exists: true',
+          input: {
+            filter: {
+              homepage: { $not: { $exists: true } },
+            },
+          },
+          expect: result => result.length === 1
+            && result[0]!.username === 'user3',
+        },
+        {
+          type: 'test',
+          name: 'filters documents matching not $exists: false',
+          input: {
+            filter: {
+              homepage: { $not: { $exists: false } },
+            },
+          },
+          expect: result => {
+            const usernames = result.map(u => u.username);
+            return usernames.length === 2
+              && usernames.includes('user1')
+              && usernames.includes('user2');
+          }
         }
       ]
     }
