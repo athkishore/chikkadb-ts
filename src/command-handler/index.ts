@@ -4,6 +4,11 @@ import type { OpMsgPayload, OpMsgPayloadSection, WireMessage } from "#server/lib
 import type { CommandResponse, MQLCommand } from "#src/types.js";
 import { ObjectId } from "bson";
 import os from 'os';
+import debug from "debug";
+
+const logCommandResult = debug('command:result');
+const logCommandMQL = debug('command:mql');
+const logCommandIR = debug('command:ir');
 
 export async function getResponse(message: WireMessage): Promise<WireMessage> {
   const { header, payload } = message;
@@ -50,7 +55,7 @@ export async function getResponse(message: WireMessage): Promise<WireMessage> {
     }
   } else if (opCode === 2013) {
     const responsePayload = await handleOpMsg(payload as OpMsgPayload);
-    console.log(responsePayload);
+    logCommandResult(responsePayload);
     if (responsePayload) {
       return {
         header: responseHeader,
@@ -298,7 +303,7 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
 
   // TODO: Define strict types for responses of specific commands
 
-  console.log(resultIR);
+  logCommandResult(resultIR);
   
 
   return {

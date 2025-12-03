@@ -3,6 +3,7 @@ import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { getUpdateFragment } from "./common/update.js";
 import { parseFromCustomJSON } from "#src/interfaces/lib/json.js";
+import { logSql, logSqlResult } from "./lib/utils.js";
 
 
 export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Database) {
@@ -14,17 +15,17 @@ export function generateAndExecuteSQL_Update(command: UpdateCommandIR, db: Datab
   const u = updates[0];
   const { filter, update } = u ?? {};
 
-  console.log(command);
-
   if (!filter) throw new Error('Missing filter for update');
   if (!update) throw new Error('Missing update');
 
   const sql = translateCommandToSQL({ collection, filter, update });
 
-  console.log(sql);
+  logSql(sql);
 
   const stmt = db.prepare(sql);
   const result = stmt.all();
+
+  logSqlResult(result);
 
   return {
     cursor: {

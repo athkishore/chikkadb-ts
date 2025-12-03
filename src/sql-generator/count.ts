@@ -2,6 +2,7 @@ import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 import type { CountCommandIR, FilterNodeIR } from "#src/types.js";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
+import { logSql, logSqlResult } from "./lib/utils.js";
 
 export function generateAndExecuteSQL_Count(command: CountCommandIR, db: Database) {
   const { collection, database } = command;
@@ -13,9 +14,10 @@ export function generateAndExecuteSQL_Count(command: CountCommandIR, db: Databas
   // const result = stmt.get();
 
   const sql = translateQueryToSQL({ collection, filter: command.filter })
-  console.log(sql);
+  logSql(sql);
   const stmt = db.prepare(sql);
   const result = stmt.get();
+  logSqlResult(result);
 
   return {
     n: Object.values(result as Object)[0],

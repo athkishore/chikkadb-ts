@@ -3,18 +3,19 @@ import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { getUpdateFragment } from "./common/update.js";
 import { parseFromCustomJSON } from "#src/interfaces/lib/json.js";
+import { logSql, logSqlResult } from "./lib/utils.js";
 
 export function generateAndExecuteSQL_FindAndModify(command: FindAndModifyCommandIR, db: Database): FindAndModifyCommandResult {
   const { collection, filter, update } = command;
 
   const sql = translateCommandToSQL({ collection, filter, update });
 
-  console.log(sql);
+  logSql(sql);
 
   const stmt = db.prepare(sql);
   const result = stmt.get();
 
-  console.log(result);
+  logSqlResult(result);
   return {
     _type: 'findAndModify',
     ok: 1,

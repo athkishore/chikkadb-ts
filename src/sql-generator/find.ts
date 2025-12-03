@@ -11,6 +11,7 @@ import {
   type TranslationContext 
 } from "./common/filter.js";
 import { parseFromCustomJSON } from "#src/interfaces/lib/json.js";
+import { logSql, logSqlResult } from "./lib/utils.js";
 
 
 
@@ -77,11 +78,12 @@ export function generateAndExecuteSQL_Find(command: FindCommandIR, db: Database)
 
   const sql = translateQueryToSQL({ collection, canonicalFilter: command.filter });
 
-  console.log(sql);
+  logSql(sql);
 
   const stmt = db.prepare(sql);
   const result = stmt.all();
 
+  logSqlResult(result);
 
   return { 
     cursor: {

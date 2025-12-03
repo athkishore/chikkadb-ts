@@ -1,6 +1,7 @@
 import type { DeleteCommandIR, FilterNodeIR } from "../types.js";
 import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
+import { logSql, logSqlResult } from "./lib/utils.js";
 
 function translateCommandToSQL({
   collection,
@@ -56,12 +57,12 @@ export function generateAndExecuteSQL_Delete(command: DeleteCommandIR, db: Datab
 
   const sql = translateCommandToSQL({ collection, filterIR });
 
-  console.log(sql);
+  logSql(sql);
 
   const stmt = db.prepare(sql);
   const result = stmt.run();
 
-  console.log(result);
+  logSqlResult(result);
 
   return {
     ok: 1,

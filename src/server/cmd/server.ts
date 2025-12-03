@@ -2,6 +2,7 @@ import { Socket, createServer } from "net";
 import { encodeMessage, processBuffer, type WireMessage } from "../lib/wire.js";
 import { getResponse } from "#command-handler/index.js";
 import minimist from 'minimist';
+import { logWireConn, logWireMsg } from "../lib/utils.js";
 
 const argv = minimist(process.argv.slice(2));
 
@@ -11,7 +12,7 @@ const PORT = argv['port'] ?? 9000;
 const server = createServer(handleNewConnection);
 
 async function handleNewConnection(sock: Socket) {
-  console.log('client connected from port:', sock.remotePort);
+  logWireConn('client connected from port:', sock.remotePort);
 
   const bufHolder = { buf: Buffer.alloc(0) };
 
@@ -19,8 +20,8 @@ async function handleNewConnection(sock: Socket) {
     bufHolder.buf = Buffer.concat([bufHolder.buf, data]);
     const messages = processBuffer(bufHolder);
     for (const message of messages) {
-      console.log(`C -> S message`, message.header);
-      console.dir(message.payload, { depth: null });
+      logWireMsg(`C -> S message`, message.header);
+      logWireMsg('%O', message.payload);
       const responseBuf = await getEncodedResponse(message);
       sock.write(responseBuf);
     }

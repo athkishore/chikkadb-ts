@@ -1,3 +1,8 @@
+import debug from 'debug';
+
+export const logWireMsg = debug('wire:msg');
+export const logWireConn = debug('wire:conn');
+
 export function prettyPrintHex(buf: Buffer, wordLength = 4, lineLength = 16): void {
   const bytesFormatted = [...buf].map(byte => byte.toString(16).padStart(2, '0').toUpperCase());
   for (const [index, byte] of bytesFormatted.entries()) {

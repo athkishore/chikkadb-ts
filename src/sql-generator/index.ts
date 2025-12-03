@@ -9,6 +9,7 @@ import { generateAndExecuteSQL_Count } from "./count.js";
 import { generateAndExecuteSQL_Delete } from "./delete.js";
 import { generateAndExecuteSQL_Update } from "./update.js";
 import { generateAndExecuteSQL_FindAndModify } from "./find-and-modify.js";
+import { logSqlExecTime } from "./lib/utils.js";
 
 export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database): any /* Add strong typing */ {
   switch (commandIR.command) {
@@ -75,7 +76,7 @@ export function executeQueryIR(command: CommandIR) : any {
     const result = generateAndExecuteSQLFromQueryIR(command, db);
     const end = Date.now();
 
-    console.log(`Executed in ${end-start} ms`);
+    logSqlExecTime(`Executed in ${end-start} ms`);
 
     db.close();
     return result;
