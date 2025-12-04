@@ -6,6 +6,8 @@ import { ObjectId } from "bson";
 import os from 'os';
 import debug from "debug";
 
+const processId = new ObjectId();
+
 const logCommandResult = debug('command:result');
 const logCommandMQL = debug('command:mql');
 const logCommandIR = debug('command:ir');
@@ -36,13 +38,13 @@ export async function getResponse(message: WireMessage): Promise<WireMessage> {
             helloOk: true,
             ismaster: true,
             topologyVersion: {
-              processId: new ObjectId(),
-              counter: 0,
+              processId,
+              counter: 0n,
             },
             maxBsonObjectSize: 16777216,
             maxMessageSizeBytes: 48000000,
             maxWriteBatchSize: 100000,
-            localTime: new Date().toISOString(),
+            localTime: new Date(),
             logicalSessionTimeoutMinutes: 30,
             connectionId: 1,
             minWireVersion: 0,
@@ -208,8 +210,8 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
             document: {
               isWritablePrimary: true,
               topologyVersion: {
-                processId: new ObjectId(),
-                counter: 0,
+                processId,
+                counter: 0n,
               },
               maxBsonObjectSize: 16777216,
               maxMessageSizeBytes: 48000000,
@@ -226,6 +228,35 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
         ],
       };
     }
+
+    case 'ismaster': {
+      return {
+        _type: 'OP_MSG',
+        flagBits: 0,
+        sections: [
+          {
+            sectionKind: 0,
+            document: {
+              ismaster: true,
+              topologyVersion: {
+                processId,
+                counter: 0n,
+              },
+              maxBsonObjectSize: 16777216,
+              maxMessageSizeBytes: 48000000,
+              maxWriteBatchSize: 100000,
+              localTime: new Date(),
+              logicalSessionTimeoutMinutes: 30,
+              connectionId: 15,
+              minWireVersion: 0,
+              maxWireVersion: 21,
+              readOnly: false,
+              ok: 1,
+            },
+          },
+        ],
+      };
+    };
 
     case 'connectionStatus': {
       return {
@@ -373,6 +404,13 @@ function getCommandFromOpMsgBody(
       }
     }
 
+    case 'ismaster': {
+      return {
+        command: 'ismaster',
+        database: document.$db,
+      }
+    }
+
     case 'endSessions': {
       return {
         command: 'endSessions',
@@ -484,6 +522,7 @@ const MONGODB_COMMANDS = [
   'ping',
   'getLog',
   'hello',
+  'ismaster',
   'endSessions',
   'create',
   'insert',

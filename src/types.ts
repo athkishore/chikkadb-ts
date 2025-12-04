@@ -13,6 +13,7 @@ export type MQLCommand =
   | PingCommand
   | GetLogCommand
   | HelloCommand
+  | IsmasterCommand
   | EndSessionsCommand
   | ConnectionStatusCommand
   | HostInfoCommand
@@ -120,6 +121,11 @@ export type HelloCommand = {
   command: 'hello';
   database: string;
 };
+
+export type IsmasterCommand = {
+  command: 'ismaster';
+  database: string;
+}
 
 export type EndSessionsCommand = {
   command: 'endSessions';
