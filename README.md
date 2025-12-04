@@ -37,7 +37,7 @@ ChikkaDB aims to implement a rich subset of the MongoDB commands that unlock the
 
 The ChikkaDB server is wire-compatible with `mongod`, so you can connect to ChikkaDB using any of your favourite MongoDB clients or language drivers.
 
-ChikkaDB achieves a great degree of BSON-compatibility by storing and operating on the Extended JSON values wherever the value is not a part of the core JSON specification. You can find the details about the representation and handling of types [here](./docs/data-types).
+ChikkaDB achieves a great degree of BSON-compatibility by storing and operating on the Extended JSON values wherever the value is not a part of the core JSON specification. See [Data Types](./docs/data-types.md) to find more details about the representation and handling of types.
 
 # Architecture
 
