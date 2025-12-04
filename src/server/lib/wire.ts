@@ -179,7 +179,7 @@ function decodeOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSe
         const size = buf.readInt32LE(pointer);
         pointer += 4;
 
-        const { s: documentSequenceIdentifier, len } = readNullTerminatedString(buf, offset + pointer);
+        const { s: documentSequenceIdentifier, len } = readNullTerminatedString(buf, pointer);
         pointer += len;
 
         const { documents } = readBSONDocuments(buf, pointer);
@@ -194,6 +194,7 @@ function decodeOpMsgPayloadSections(buf: Buffer, offset: number): OpMsgPayloadSe
         };
 
         sections.push(section);
+        pointer += size;
         break;
       }
     }
