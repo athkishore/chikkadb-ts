@@ -80,6 +80,20 @@ export function generateAndExecuteSQL_Find(command: FindCommandIR, db: Database)
 
   if (!isCollectionNameValid) throw new Error('Invalid Collection Name');
 
+  const getTablesStmt = db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table'`)
+  const tables = getTablesStmt.all();
+
+  if (!tables.some((t: any) => t.name === collection)) {
+    return {
+      cursor: {
+        firstBatch: [],
+        id: 0n,
+        ns: `${database}.${collection}`,
+      },
+      ok: 1,
+    }
+  }
+
   // const stmt = db.prepare(`SELECT doc FROM ${collection}`);
   // const result = stmt.all();
 
