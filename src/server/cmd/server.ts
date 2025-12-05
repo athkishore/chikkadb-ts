@@ -26,6 +26,11 @@ async function handleNewConnection(sock: Socket) {
       sock.write(responseBuf);
     }
   });
+
+  sock.on('error', (error) => {
+    console.error(error);
+    sock.destroy();
+  });
 }
 
 server.listen(PORT, () => {
