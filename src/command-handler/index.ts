@@ -261,6 +261,26 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
       };
     };
 
+    case 'listIndexes': {
+      return {
+        _type: 'OP_MSG',
+        flagBits: 0,
+        sections: [
+          {
+            sectionKind: 0,
+            document: {
+              cursor: {
+                id: 0n,
+                ns: `${command.database}.${command.collection}`,
+                firstBatch: [],
+              },
+              ok: 1,
+            },
+          },
+        ],
+      };
+    }
+
     case 'connectionStatus': {
       return {
         _type: 'OP_MSG',
@@ -419,6 +439,14 @@ function getCommandFromOpMsgBody(
       }
     }
 
+    case 'listIndexes': {
+      return {
+        command: 'listIndexes',
+        database: document.$db,
+        collection: document.listIndexes,
+      };
+    }
+
     case 'endSessions': {
       return {
         command: 'endSessions',
@@ -543,4 +571,5 @@ const MONGODB_COMMANDS = [
   'hostInfo',
   'listDatabases',
   'listCollections',
+  'listIndexes',
 ] as const;

@@ -19,6 +19,7 @@ export type MQLCommand =
   | HostInfoCommand
   | ListDatabasesCommand
   | ListCollectionsCommand
+  | ListIndexesCommand;
 
 export type CreateCommand = {
   command: 'create';
@@ -155,6 +156,12 @@ export type ListCollectionsCommand = {
   database: string;
   // filter
   nameOnly?: boolean;
+};
+
+export type ListIndexesCommand = {
+  command: 'listIndexes';
+  database: string;
+  collection: string;
 };
 
 
