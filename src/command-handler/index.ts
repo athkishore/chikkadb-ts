@@ -219,7 +219,7 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
               maxBsonObjectSize: 16777216,
               maxMessageSizeBytes: 48000000,
               maxWriteBatchSize: 100000,
-              localTime: new Date().toISOString(),
+              localTime: new Date(),
               logicalSessionTimeoutMinutes: 30,
               connectionId: 1,
               minWireVersion: 0,
