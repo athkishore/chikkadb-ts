@@ -156,22 +156,22 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
       };
     }
 
-    case 'aggregate': {
-      // Dummy response for handshake messages
-      // Actual aggregate will be implemented later
-      return {
-        _type: 'OP_MSG',
-        flagBits: 0,
-        sections: [
-          {
-            sectionKind: 0,
-            document: {
-              cursor: {}
-            }
-          }
-        ]
-      };
-    }
+    // case 'aggregate': {
+    //   // Dummy response for handshake messages
+    //   // Actual aggregate will be implemented later
+    //   return {
+    //     _type: 'OP_MSG',
+    //     flagBits: 0,
+    //     sections: [
+    //       {
+    //         sectionKind: 0,
+    //         document: {
+    //           cursor: {}
+    //         }
+    //       }
+    //     ]
+    //   };
+    // }
 
     case 'ping': {
       return {
@@ -405,6 +405,7 @@ function getCommandFromOpMsgBody(
       return {
         command: 'aggregate',
         database: document.$db,
+        collection: document.aggregate,
         pipeline: document.pipeline,
         cursor: document.cursor,
       };
@@ -569,6 +570,7 @@ const MONGODB_COMMANDS = [
   'delete',
   'update',
   'findAndModify',
+  'aggregate',
   'connectionStatus',
   'hostInfo',
   'listDatabases',

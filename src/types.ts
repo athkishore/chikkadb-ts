@@ -103,8 +103,9 @@ export type GetParameterCommand = {
 export type AggregateCommand = {
   command: 'aggregate';
   database: string;
-  pipeline: any[];
-  cursor: any;
+  collection: string | 1;
+  pipeline: AggregationStage[];
+  cursor: {}; // For now, ignore cursor options
 };
 
 export type PingCommand = {
@@ -164,6 +165,20 @@ export type ListIndexesCommand = {
   collection: string;
 };
 
+
+export type AggregationStage = 
+  | AggregationStage_$match
+  | AggregationStage_$count;
+
+export type AggregationStage_$match = {
+  stage: '$match';
+  filter: Record<string, any>;
+};
+
+export type AggregationStage_$count = {
+  stage: '$count';
+  key: string;
+};
 
 export type CommandResponse = {};
 
@@ -318,6 +333,7 @@ export type CommandIR =
   | InsertCommandIR
   | UpdateCommandIR
   | FindAndModifyCommandIR
+  | AggregateCommandIR
   | CreateCommandIR
   | ListDatabasesCommandIR
   | ListCollectionsCommandIR;
@@ -394,7 +410,14 @@ export type FindAndModifyCommandResult = {
   _type: 'findAndModify';
   value: Record<string, any>;
   ok: 0 | 1;
-}
+};
+
+export type AggregateCommandIR = {
+  command: 'aggregate';
+  database: string;
+  collection: string | 1;
+  pipeline: AggregationStageIR[];
+};
 
 export type ListDatabasesCommandIR = {
   command: 'listDatabases';
@@ -405,6 +428,22 @@ export type ListCollectionsCommandIR = {
   command: 'listCollections';
   database: string;
 };
+
+/************************************/
+
+export type AggregationStageIR = 
+  | AggregationStageIR_$match
+  | AggregationStageIR_$count;
+
+export type AggregationStageIR_$match = {
+  stage: '$match';
+  filter: FilterNodeIR;
+};
+
+export type AggregationStageIR_$count = {
+  stage: '$count';
+  key: string;
+}
 
 export type QueryIR = {};
 export type ResultIR = {};

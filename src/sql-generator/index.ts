@@ -41,6 +41,10 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
       return generateAndExecuteSQL_FindAndModify(commandIR, db);
     }
 
+    // case 'aggregate': {
+    //   return generateAndExecuteSQL_aggregate(commandIR, db);
+    // }
+
     case 'listDatabases': {
       return {
         databases: listDatabases().map(d => ({ name: d })),

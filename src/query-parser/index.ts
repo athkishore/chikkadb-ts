@@ -1,4 +1,5 @@
 import type { MQLCommand, CommandIR } from "#src/types.js";
+import { parseAggregateCommand } from "./aggregate.js";
 import { parseCountCommand } from "./count.js";
 import { parseDeleteCommand } from "./delete.js";
 import { parseFindAndModifyCommand } from "./find-and-modify.js";
@@ -29,6 +30,10 @@ export function generateQueryIRFromCommand(command: MQLCommand): CommandIR {
 
     case 'findAndModify': {
       return parseFindAndModifyCommand(command);
+    }
+
+    case 'aggregate': {
+      return parseAggregateCommand(command);
     }
 
     case 'count': {
