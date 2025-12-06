@@ -168,7 +168,8 @@ export type ListIndexesCommand = {
 
 export type AggregationStage = 
   | AggregationStage_$match
-  | AggregationStage_$count;
+  | AggregationStage_$count
+  | AggregationStage_$limit;
 
 export type AggregationStage_$match = {
   stage: '$match';
@@ -178,6 +179,11 @@ export type AggregationStage_$match = {
 export type AggregationStage_$count = {
   stage: '$count';
   key: string;
+};
+
+export type AggregationStage_$limit = {
+  stage: '$limit';
+  limit: number;
 };
 
 export type CommandResponse = {};
@@ -433,7 +439,8 @@ export type ListCollectionsCommandIR = {
 
 export type AggregationStageIR = 
   | AggregationStageIR_$match
-  | AggregationStageIR_$count;
+  | AggregationStageIR_$count
+  | AggregationStageIR_$limit;
 
 export type AggregationStageIR_$match = {
   stage: '$match';
@@ -443,7 +450,12 @@ export type AggregationStageIR_$match = {
 export type AggregationStageIR_$count = {
   stage: '$count';
   key: string;
-}
+};
+
+export type AggregationStageIR_$limit = {
+  stage: '$limit';
+  limit: number;
+};
 
 export type QueryIR = {};
 export type ResultIR = {};

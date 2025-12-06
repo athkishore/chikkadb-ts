@@ -6,7 +6,7 @@ export function translateMatchToSQL(stage: AggregationStageIR_$match, index: num
 
   if (filter.operator === '$and' && filter.operands.length === 0) {
     let s = '';
-    s += `stage${index - 1} AS (\n`;
+    s += `stage${index} AS (\n`;
     s += `  SELECT id, c.doc\n`;
     s += `  FROM ${index === 0 ? collection : `stage${index - 1}`} c\n`;
     s += `)`;
@@ -25,8 +25,8 @@ export function translateMatchToSQL(stage: AggregationStageIR_$match, index: num
   const { conditionCTEs } = context;
 
   let s = '';
-  s += `stage${index - 1} AS (\n`;
-  s += `  SELECT id, c.doc\n`;
+  s += `stage${index} AS (\n`;
+  s += `  SELECT c.id, c.doc\n`;
   s += `  FROM ${index === 0 ? collection : `stage${index - 1}`} c\n`;
   s += `  WHERE EXISTS (\n`;
   s += `    WITH ${conditionCTEs.join(',')}\n`;

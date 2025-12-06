@@ -34,7 +34,7 @@ export function generateAndExecuteSQL_Aggregate(
     throw new Error('Invalid collection name');
   }
 
-  const getTablesStmt = db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table`);
+  const getTablesStmt = db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table'`);
   const tables = getTablesStmt.all();
 
   if (!tables.some((t: any) => t.name === collection)) {

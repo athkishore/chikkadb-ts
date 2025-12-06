@@ -423,6 +423,12 @@ function getCommandFromOpMsgBody(
                 key: s[stage],
               };
             }
+            case '$limit': {
+              return {
+                stage,
+                limit: s[stage],
+              };
+            }
             default: {
               return null;
             }

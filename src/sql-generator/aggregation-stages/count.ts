@@ -9,10 +9,10 @@ export function translateCountToSQL(stage: AggregationStageIR_$count, index: num
   s += `    null as id,\n`;
   s += `    json_object(\n`;
   s += `      '${key}',\n`;
-  s += `       COUNT(DISTINCT(stage${index - 1}.id))\n`
+  s += `       COUNT(DISTINCT(${index === 0 ? collection : `stage${index - 1}`}.id))\n`
   s += `    ) as doc\n`;
   s += `  FROM ${index === 0 ? collection : `stage${index - 1}`}\n`;
-  s + `)`;
+  s += `)`;
 
   return s;
 }

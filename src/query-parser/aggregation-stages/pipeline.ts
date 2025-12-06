@@ -1,5 +1,6 @@
 import type { AggregationStage, AggregationStageIR } from "#src/types.js";
 import { parseCountStage } from "./count.js";
+import { parseLimitStage } from "./limit.js";
 import { parseMatchStage } from "./match.js";
 
 export function parsePipeline(pipeline: AggregationStage[]): AggregationStageIR[] {
@@ -13,6 +14,10 @@ export function parsePipeline(pipeline: AggregationStage[]): AggregationStageIR[
       }
       case '$count': {
         pipelineIR.push(parseCountStage(stage));
+        break;
+      }
+      case '$limit': {
+        pipelineIR.push(parseLimitStage(stage));
         break;
       }
       default: {
