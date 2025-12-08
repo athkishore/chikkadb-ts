@@ -47,6 +47,14 @@ export function generateQueryIRFromCommand(command: MQLCommand): CommandIR {
     case 'listCollections': {
       return command;
     }
+
+    case 'drop': {
+      return command;
+    }
+
+    case 'dropDatabase': {
+      return command;
+    }
   }
 
   // TODO: handle errors

@@ -3,7 +3,7 @@ import Database from "better-sqlite3";
 import { generateAndExecuteSQL_Create } from "./create.js";
 import { generateAndExecuteSQL_Insert } from "./insert.js";
 import { generateAndExecuteSQL_Find } from "./find.js";
-import { getDatabase, listDatabases } from "#database/index.js";
+import { deleteDatabase, getDatabase, listDatabases } from "#database/index.js";
 import { generateAndExecuteSQL_ListCollections } from "./list-collections.js";
 import { generateAndExecuteSQL_Count } from "./count.js";
 import { generateAndExecuteSQL_Delete } from "./delete.js";
@@ -11,6 +11,7 @@ import { generateAndExecuteSQL_Update } from "./update.js";
 import { generateAndExecuteSQL_FindAndModify } from "./find-and-modify.js";
 import { logSqlExecTime } from "./lib/utils.js";
 import { generateAndExecuteSQL_Aggregate } from "./aggregate.js";
+import { generateAndExecuteSQL_Drop } from "./drop.js";
 
 export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database): any /* Add strong typing */ {
   switch (commandIR.command) {
@@ -68,6 +69,20 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
         ok: 1,
       };
     }
+
+    case 'drop': {
+      return generateAndExecuteSQL_Drop(commandIR, db);
+    }
+
+    case 'dropDatabase': {
+      db.close();
+      const result = deleteDatabase(commandIR.database);
+      if (result === 0) {
+        return { ok: 1 };
+      } else {
+        return { ok: 0 };
+      }
+    }
   }
   
   return db.prepare('');
@@ -83,7 +98,12 @@ export function executeQueryIR(command: CommandIR) : any {
 
     logSqlExecTime(`Executed in ${end-start} ms`);
 
-    db.close();
+    try {
+      db.close();
+    } catch (error) {
+      console.error(error);
+    }
+    
     return result;
   } catch (error) {
     console.error(error);

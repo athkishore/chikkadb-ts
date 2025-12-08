@@ -490,6 +490,21 @@ function getCommandFromOpMsgBody(
       };
     }
 
+    case 'drop': {
+      return {
+        command: 'drop',
+        database: document.$db,
+        collection: document.drop,
+      };
+    }
+
+    case 'dropDatabase': {
+      return {
+        command: 'dropDatabase',
+        database: document.$db,
+      };
+    }
+
     case 'insert': {
       return {
         command: 'insert',
@@ -603,4 +618,6 @@ const MONGODB_COMMANDS = [
   'listDatabases',
   'listCollections',
   'listIndexes',
+  'drop',
+  'dropDatabase',
 ] as const;

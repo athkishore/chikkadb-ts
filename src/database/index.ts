@@ -20,3 +20,16 @@ export function getDatabase(name: string) {
   const db = new Database(`${DB_PATH}/${name}.sqlite`);
   return db;
 }
+
+export function deleteDatabase(name: string): Error | 0 {
+  try {
+    if (fs.existsSync(`${DB_PATH}/${name}.sqlite`)) {
+      fs.unlinkSync(`${DB_PATH}/${name}.sqlite`);
+    }
+
+    return 0;
+  } catch (error) {
+    return error as Error;
+  }
+  
+}

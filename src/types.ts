@@ -19,7 +19,8 @@ export type MQLCommand =
   | HostInfoCommand
   | ListDatabasesCommand
   | ListCollectionsCommand
-  | ListIndexesCommand;
+  | ListIndexesCommand
+  | DropDatabaseCommand;
 
 export type CreateCommand = {
   command: 'create';
@@ -32,6 +33,11 @@ export type DropCommand = {
   command: 'drop';
   database: string;
   collection: string;
+};
+
+export type DropDatabaseCommand = {
+  command: 'dropDatabase';
+  database: string;
 };
 
 export type InsertCommand = {
@@ -342,7 +348,9 @@ export type CommandIR =
   | AggregateCommandIR
   | CreateCommandIR
   | ListDatabasesCommandIR
-  | ListCollectionsCommandIR;
+  | ListCollectionsCommandIR
+  | DropCommandIR
+  | DropDatabaseCommandIR;
 
 export type CommandResult = 
   | InsertCommandResult;
@@ -392,6 +400,17 @@ export type CreateCommandIR = {
   command: 'create';
   database: string;
   collection: string;
+};
+
+export type DropCommandIR = {
+  command: 'drop';
+  database: string;
+  collection: string;
+};
+
+export type DropDatabaseCommandIR = {
+  command: 'dropDatabase';
+  database: string;
 };
 
 export type UpdateCommandIR = {
