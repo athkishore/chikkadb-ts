@@ -160,7 +160,35 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
 
     /** p{i}_mod CTE */
     s += `  p${pathIndex}_mod AS (\n`;
-    s += `  ),\n`;
+    s += `    SELECT\n`;
+    for (let idx = 0; idx < pathIndex; idx++) {
+      s += `      p${pathIndex}_each_mod.p${idx}_k AS p${idx}_k,\n`;
+      s += `      p${pathIndex}_each_mod.p${idx}_t AS p${idx}_t,\n`;
+      s += `      p${pathIndex}_each_mod.p${idx}_each_i AS p${idx}_each_i,\n`;
+      s += `      p${pathIndex}_each_mod.p${idx}_each_t AS p${idx}_each_t,\n`;
+    }
+    s += `      p${pathIndex}_each_mod.p${pathIndex}_k AS p${pathIndex}_k,\n`;
+    s += `      p${pathIndex}_each_mod.p${pathIndex}_t AS p${pathIndex}_t,\n`;
+    s += `      CASE p${pathIndex}_each_mod.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1, `p${pathIndex}_each_mod`)})\n`;
+    s += `        WHEN TRUE THEN json_group_array(\n`;
+    s += `          CASE p${pathIndex}_each_mod.p${pathIndex}_each_t = 'array' OR p${pathIndex}_each_mod.p${pathIndex}_each_t = 'object'\n`;
+    s += `            WHEN TRUE THEN json(p${pathIndex}_each_mod.p${pathIndex}_each_v)\n`;
+    s += `            ELSE p${pathIndex}_each_mod.p${pathIndex}_each_v\n`;
+    s += `          END\n`;
+    s += `        )\n`;
+    s += `        ELSE p${pathIndex}_each_mod.p${pathIndex}_each_v\n`;
+    s += `      END AS p${pathIndex}_v\n`;
+    s += `    FROM p${pathIndex}_each_mod\n`;
+    s += `    GROUP BY `;
+    for (let idx = 0; idx <= pathIndex; idx++) {
+      s += `p${pathIndex}_each_mod.p${idx}_k`;
+      if (idx < pathIndex) {
+        s += `, p${pathIndex}_each_mod.p${idx}_each_i, `;
+      } else {
+        s += '\n';
+      }
+    }
+    s += `  )${pathIndex > 0 ? ',' : ''}\n`;
     /** End of p{i}_mod CTE */
     pathIndex--;
   }
