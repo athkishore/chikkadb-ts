@@ -1,4 +1,7 @@
+import config from "#src/config.js";
 import type { ProjectionDocIR, ProjectionNodeIR } from "#src/types.js";
+
+const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 
 export function getProjectionFragment(projection: ProjectionDocIR) {
   const includePaths = getPathsFromIR(projection.include);
@@ -51,12 +54,12 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     }
 
     if (pathIndex === 0) {
-      s += `    FROM json_each(c.doc) AS je\n`;
+      s += `    FROM ${JSON_TYPE}_each(c.doc) AS je\n`;
     } else {
       s += `    FROM\n`;
       s += `      p${pathIndex - 1}_each\n`;
       s += `      CROSS JOIN (SELECT 1)\n`;
-      s += `      LEFT JOIN json_each(\n`;
+      s += `      LEFT JOIN ${JSON_TYPE}_each(\n`;
       s += `        CASE p${pathIndex - 1}_each.p${pathIndex - 1}_each_t = 'object' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex, `p${pathIndex - 1}_each`)})\n`;
       s += `          WHEN TRUE THEN p${pathIndex - 1}_each.p${pathIndex - 1}_each_v\n`;
       s += `          ELSE '{}'\n`;
@@ -118,7 +121,7 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     s += `    FROM\n`;
     s += `      p${pathIndex}\n`;
     s += `      CROSS JOIN (SELECT 1)\n`;
-    s += `      LEFT JOIN json_each(\n`;
+    s += `      LEFT JOIN ${JSON_TYPE}_each(\n`;
     s += `        CASE p${pathIndex}.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1, `p${pathIndex}`)})\n`;
     s += `          WHEN TRUE THEN p${pathIndex}.p${pathIndex}_v\n`;
     s += `          ELSE '[]'\n`;
@@ -141,9 +144,9 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
       s += `      p${pathIndex + 1}_mod.p${idx}_each_t AS p${idx}_each_t,\n`;
     }
     s += `      CASE p${pathIndex + 1}_mod.p${pathIndex}_each_t = 'object' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1, `p${pathIndex + 1}_mod`)}) \n`;
-    s += `        WHEN TRUE THEN json_group_object(\n`;
+    s += `        WHEN TRUE THEN ${JSON_TYPE}_group_object(\n`;
     s += `          p${pathIndex+1}_mod.p${pathIndex + 1}_k,\n`;
-    s += `          CASE p${pathIndex + 1}_mod.p${pathIndex + 1}_t = 'array' OR p${pathIndex + 1}_mod.p${pathIndex + 1}_t = 'object' WHEN TRUE THEN json(p${pathIndex + 1}_mod.p${pathIndex + 1}_v) ELSE p${pathIndex + 1}_mod.p${pathIndex + 1}_v END\n`;
+    s += `          CASE p${pathIndex + 1}_mod.p${pathIndex + 1}_t = 'array' OR p${pathIndex + 1}_mod.p${pathIndex + 1}_t = 'object' WHEN TRUE THEN ${JSON_TYPE}(p${pathIndex + 1}_mod.p${pathIndex + 1}_v) ELSE p${pathIndex + 1}_mod.p${pathIndex + 1}_v END\n`;
     s += `        )\n`;
     s += `        ELSE p${pathIndex + 1}_mod.p${pathIndex + 1}_v\n`;
     s += `      END AS p${pathIndex}_each_v\n`
@@ -168,9 +171,9 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     s += `      p${pathIndex}_each_mod.p${pathIndex}_k AS p${pathIndex}_k,\n`;
     s += `      p${pathIndex}_each_mod.p${pathIndex}_t AS p${pathIndex}_t,\n`;
     s += `      CASE p${pathIndex}_each_mod.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1, `p${pathIndex}_each_mod`)})\n`;
-    s += `        WHEN TRUE THEN json_group_array(\n`;
+    s += `        WHEN TRUE THEN ${JSON_TYPE}_group_array(\n`;
     s += `          CASE p${pathIndex}_each_mod.p${pathIndex}_each_t = 'array' OR p${pathIndex}_each_mod.p${pathIndex}_each_t = 'object'\n`;
-    s += `            WHEN TRUE THEN json(p${pathIndex}_each_mod.p${pathIndex}_each_v)\n`;
+    s += `            WHEN TRUE THEN ${JSON_TYPE}(p${pathIndex}_each_mod.p${pathIndex}_each_v)\n`;
     s += `            ELSE p${pathIndex}_each_mod.p${pathIndex}_each_v\n`;
     s += `          END\n`;
     s += `        )\n`;
@@ -191,7 +194,7 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     pathIndex--;
   }
 
-  s += `  SELECT json_group_object(p0_mod.p0_k, json(p0_mod.p0_v)) FROM p0_mod\n`;
+  s += `  SELECT json_group_object(p0_mod.p0_k, ${JSON_TYPE}(p0_mod.p0_v)) FROM p0_mod\n`;
 
   s += `) AS doc`;
 
