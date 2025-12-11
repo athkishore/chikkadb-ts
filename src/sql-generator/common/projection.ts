@@ -96,6 +96,36 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     
     /** p{i}_each CTE */
     s += `  p${pathIndex}_each AS (\n`;
+    s += `    SELECT\n`;
+    for (let idx = 0; idx < pathIndex; idx++) {
+      s += `      p${pathIndex}.p${idx}_k AS p${idx}_k,\n`;
+      s += `      p${pathIndex}.p${idx}_t AS p${idx}_t,\n`;
+      s += `      p${pathIndex}.p${idx}_each_i AS p${idx}_each_i,\n`;
+      s += `      p${pathIndex}.p${idx}_each_t AS p${idx}_each_t,\n`;
+    }
+    s += `      p${pathIndex}.p${pathIndex}_k AS p${pathIndex}_k,\n`;
+    s += `      p${pathIndex}.p${pathIndex}_t AS p${pathIndex}_t,\n`;
+    s += `      CASE p${pathIndex}.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1)})\n`;
+    s += `        WHEN TRUE THEN je.key\n`;
+    s += `        ELSE null\n`;
+    s += `      END AS p${pathIndex}_each_i,\n`;
+    s += `      CASE p${pathIndex}.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1)})\n`;
+    s += `        WHEN TRUE THEN je.type\n`;
+    s += `        ELSE p${pathIndex}.p${pathIndex}_t\n`
+    s += `      END AS p${pathIndex}_each_t,\n`;
+    s += `      CASE p${pathIndex}.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1)})\n`;
+    s += `        WHEN TRUE THEN je.value\n`;
+    s += `        ELSE p${pathIndex}.p${pathIndex}_v\n`;
+    s += `      END AS p${pathIndex}_each_v\n`;
+    s += `    FROM\n`;
+    s += `      p${pathIndex}\n`;
+    s += `      CROSS JOIN (SELECT 1)\n`;
+    s += `      LEFT JOIN json_each(\n`;
+    s += `        CASE p${pathIndex}.p${pathIndex}_t = 'array' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex + 1)})\n`;
+    s += `          WHEN TRUE THEN p${pathIndex}.p${pathIndex}_v\n`;
+    s += `          ELSE '[]'\n`;
+    s += `        END\n`;
+    s += `      ) AS je\n`;
     s += `  ),\n`;
     /** End of p{i}_each CTE */
     pathIndex++;
