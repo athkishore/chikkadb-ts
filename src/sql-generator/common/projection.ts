@@ -62,7 +62,8 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
       s += `      LEFT JOIN json_each(\n`;
       s += `        CASE p${pathIndex - 1}_each.p${pathIndex - 1}_t = 'object' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex, `p${pathIndex - 1}_each`)})\n`;
       s += `          WHEN TRUE THEN p${pathIndex - 1}_each.p${pathIndex - 1}_each_v\n`;
-      s += `          ELSE '{}'\n`
+      s += `          ELSE '{}'\n`;
+      s += `        END\n`;
       s += `      ) AS je\n`;
     }
 
@@ -193,6 +194,7 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
     pathIndex--;
   }
 
+  s += `  SELECT json_group_object(p0_mod.p0_k, json(p0_mod.p0_v)) FROM p0_mod\n`;
 
   s += `)`;
 
