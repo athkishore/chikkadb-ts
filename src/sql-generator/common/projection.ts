@@ -66,6 +66,26 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
       s += `      ) AS je\n`;
     }
 
+    s += `    WHERE (\n`;
+    s += `      SELECT 1\n`;
+    s += `      FROM include_paths\n`;
+    s += `      WHERE (\n`;
+    
+    if (pathIndex === 0) {
+      s += `        include_paths._path LIKE je.key || '%'\n`;
+    } else {
+      s += `        CASE include_paths._length\n`;
+      
+      for (let l = 1; l <= pathIndex; l++) {
+        s += `          WHEN ${l} THEN include_paths._path LIKE ${getPathMatchExp(l, { suffix: true, suffixDot: false })}\n`;
+      }
+      s += `          ELSE include_paths._path LIKE ${getPathMatchExp(pathIndex, { suffix: false, suffixDot: false })} je.key || '%'\n`;
+      s += `        END\n`;
+    }
+
+    s += `      )\n`;
+    s += `    )\n`;
+
     s += `  ),\n`;
     /** End of p{i} CTE */
 
@@ -128,15 +148,15 @@ function getPathsFromIR(nodes: ProjectionNodeIR[]) {
 
 }
 
-function getPathMatchExp(pathIndex: number) {
+function getPathMatchExp(pathIndex: number, options = { suffix: true, suffixDot: true }) {
   return Array.from({ length: pathIndex })
     .reduce((acc, _, index) => {
       let fragment = acc;
       fragment += `p${pathIndex - 1}.p${index}_k`;
-      if (index === pathIndex - 1) {
-        fragment += ` || '.%'`;
+      if (index === pathIndex - 1 && options.suffix) {
+        fragment += ` || '${options.suffixDot ? '.' : ''}%'`;
       } else {
-        fragment += ` || '.'`;
+        fragment += ` || '.' || `;
       }
       return fragment;
     }, '');
