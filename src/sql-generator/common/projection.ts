@@ -60,7 +60,7 @@ export function getProjectionFragment(projection: ProjectionDocIR) {
       s += `      p${pathIndex - 1}_each\n`;
       s += `      CROSS JOIN (SELECT 1)\n`;
       s += `      LEFT JOIN json_each(\n`;
-      s += `        CASE p${pathIndex - 1}_each.p${pathIndex - 1}_t = 'object' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex, `p${pathIndex - 1}_each`)})\n`;
+      s += `        CASE p${pathIndex - 1}_each.p${pathIndex - 1}_each_t = 'object' AND (SELECT 1 FROM include_paths WHERE include_paths._path LIKE ${getPathMatchExp(pathIndex, `p${pathIndex - 1}_each`)})\n`;
       s += `          WHEN TRUE THEN p${pathIndex - 1}_each.p${pathIndex - 1}_each_v\n`;
       s += `          ELSE '{}'\n`;
       s += `        END\n`;
