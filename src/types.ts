@@ -321,6 +321,7 @@ export const DOC_LEVEL_FILTER_OPERATORS = [
 export const UPDATE_OPERATORS_FIELD = [
   '$set',
   '$unset',
+  '$inc',
 ] as const;
 
 export type SortNodeIR = {
@@ -340,7 +341,8 @@ export type ProjectionNodeIR = {
 
 export type UpdateNodeIR = 
   | UpdateNodeIR_$set
-  | UpdateNodeIR_$unset;
+  | UpdateNodeIR_$unset
+  | UpdateNodeIR_$inc;
 
 export type UpdateNodeIR_$set = {
   operator: '$set';
@@ -351,6 +353,11 @@ export type UpdateNodeIR_$unset = {
   operator: '$unset';
   operandsArr: [FieldReference, Value][];
 };
+
+export type UpdateNodeIR_$inc = {
+  operator: '$inc';
+  operandsArr: [FieldReference, number][];
+}
 
 export type CommandIR = 
   | FindCommandIR
