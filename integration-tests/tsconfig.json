@@ -1,15 +1,10 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
-      "#src": ["./src"],
-      "#query-parser": ["./src/query-parser"],
-      "#command-handler": ["./src/command-handler"],
-      "#server": ["./src/server"],
-      "#sql-generator": ["./src/sql-generator"]
+      
     },
-
     "module": "nodenext",
     "target": "esnext",
     "moduleResolution": "nodenext",
@@ -24,6 +19,7 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "declaration": true
   },
   "include": ["src", "tests"],
 }

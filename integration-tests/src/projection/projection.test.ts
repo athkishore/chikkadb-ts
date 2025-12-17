@@ -1,12 +1,12 @@
-import { parseFromCustomJSON, stringifyToCustomJSON } from "#src/interfaces/lib/json.js";
+import { parseFromCustomJSON, stringifyToCustomJSON } from "@chikkadb/interfaces/lib/json";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from 'fs';
 import Database from "better-sqlite3";
 import { after, before, describe, it } from "node:test";
 import { ObjectId } from "bson";
-import { parseFindCommand } from "#src/query-parser/find.js";
-import { generateAndExecuteSQLFromQueryIR } from "#src/sql-generator/index.js";
+import { generateQueryIRFromCommand } from "@chikkadb/command-parser";
+import { generateAndExecuteSQLFromQueryIR } from "@chikkadb/backend-sqlite";
 import assert, { ok } from "node:assert";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -146,7 +146,7 @@ const suite: Suite = {
 
 function executeTest(test: Test) {
   it(test.name, () => {
-    const commandIR = parseFindCommand({
+    const commandIR = generateQueryIRFromCommand({
       command: 'find',
       database: 'test',
       collection: 'users',
@@ -154,7 +154,7 @@ function executeTest(test: Test) {
       projection: test.input.projection,
     });
 
-    const sqlResult = generateAndExecuteSQLFromQueryIR(commandIR, db);
+    const sqlResult = generateAndExecuteSQLFromQueryIR(commandIR, db, '');
     const sqlResultDocuments = sqlResult.cursor.firstBatch;
 
     assert(test.expect(sqlResultDocuments, seedCollections[0].documents));

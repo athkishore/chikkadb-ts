@@ -7,7 +7,7 @@ const testFiles = process.argv.slice(2);
 async function runTests() {
   // globalSetup
 
-  const filesRel = await glob(`tests/**/*.test.ts`);
+  const filesRel = await glob(`**/*.test.ts`);
   const filesAbs = filesRel
     .map(file => path.resolve(file))
     .filter(fileAbs => testFiles.length > 0 ? testFiles.some(el => fileAbs.match(el)) : true);

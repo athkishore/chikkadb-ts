@@ -1,0 +1,22 @@
+{
+  "name": "@chikkadb/integration-tests",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "node --import tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@chikkadb/backend-sqlite": "file:../backend-sqlite",
+    "@chikkadb/command-parser": "file:../command-parser",
+    "@chikkadb/interfaces": "file:../interfaces"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  }
+}

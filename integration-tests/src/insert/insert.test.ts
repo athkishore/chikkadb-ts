@@ -1,10 +1,10 @@
 import Database from 'better-sqlite3';
 import { ObjectId } from 'bson';
 import { before, describe, it } from 'node:test';
-import { generateAndExecuteSQLFromQueryIR } from '#sql-generator/index.js';
+import { generateAndExecuteSQLFromQueryIR } from '@chikkadb/backend-sqlite';
 import assert from 'assert';
-import type { InsertCommandIR } from '../../src/types.js';
-import { parseFromCustomJSON, stringifyToCustomJSON } from '#src/interfaces/lib/json.js';
+import type { InsertCommandIR } from '@chikkadb/interfaces/command/types';
+import { parseFromCustomJSON, stringifyToCustomJSON } from '@chikkadb/interfaces/lib/json';
 
 const collection = 'users';
 const documents = [
@@ -34,7 +34,7 @@ describe('insert command', () => {
       documents,
     };
 
-    generateAndExecuteSQLFromQueryIR(command, db);
+    generateAndExecuteSQLFromQueryIR(command, db, '');
 
     const stmt = db.prepare(`SELECT doc FROM ${collection}`);
     const stmtResult = stmt.all();

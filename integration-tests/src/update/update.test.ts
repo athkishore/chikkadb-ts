@@ -1,6 +1,6 @@
-import { parseFromCustomJSON, stringifyToCustomJSON } from '#src/interfaces/lib/json.js';
-import { parseUpdateCommand } from '#src/query-parser/update.js';
-import { generateAndExecuteSQLFromQueryIR } from '#src/sql-generator/index.js';
+import { parseFromCustomJSON, stringifyToCustomJSON } from '@chikkadb/interfaces/lib/json';
+import { generateQueryIRFromCommand } from '@chikkadb/command-parser';
+import { generateAndExecuteSQLFromQueryIR } from '@chikkadb/backend-sqlite';
 import assert from 'assert';
 import Database from 'better-sqlite3';
 import { ObjectId } from 'bson';
@@ -340,7 +340,7 @@ const suite: Suite = {
 
 function executeTest(test: Test) {
   it(test.name, () => {
-    const commandIR = parseUpdateCommand({
+    const commandIR = generateQueryIRFromCommand({
       command: 'update',
       database: 'test',
       collection: 'users',
@@ -350,7 +350,7 @@ function executeTest(test: Test) {
       }],
     });
 
-    const sqlResult = generateAndExecuteSQLFromQueryIR(commandIR, db);
+    const sqlResult = generateAndExecuteSQLFromQueryIR(commandIR, db, '');
     const sqlResultDocuments = sqlResult.cursor.firstBatch;
 
     assert(test.expect(sqlResultDocuments, seedCollections[0].documents));
