@@ -1,4 +1,4 @@
-import type { CountCommand, CountCommandIR } from "#src/types.js";
+import type { CountCommand, CountCommandIR } from "@chikkadb/interfaces/command/types";
 import { parseFilterDoc } from "./common/filter.js";
 
 export function parseCountCommand(command: CountCommand): CountCommandIR {

@@ -1,4 +1,4 @@
-import type { ProjectionDocIR, ProjectionNodeIR } from "#src/types.js";
+import type { ProjectionDocIR, ProjectionNodeIR } from "@chikkadb/interfaces/command/types";
 
 export function project(doc: Record<string, any>, projection: ProjectionDocIR) {
   const includePaths = getPathsFromIR(projection.include);

@@ -1,4 +1,4 @@
-import type { AggregationStageIR_$count } from "#src/types.js";
+import type { AggregationStageIR_$count } from "@chikkadb/interfaces/command/types";
 
 export function translateCountToSQL(stage: AggregationStageIR_$count, index: number, collection: string): string {
   const { key } = stage;

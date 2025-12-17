@@ -1,4 +1,4 @@
-import type { FindCommand, FindCommandIR } from "#src/types.js";
+import type { FindCommand, FindCommandIR } from "@chikkadb/interfaces/command/types";
 import { parseFilterDoc } from "./common/filter.js";
 import { parseProjectionDoc } from "./common/projection.js";
 import { parseSortDoc } from "./common/sort.js";

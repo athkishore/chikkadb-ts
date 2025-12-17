@@ -1,4 +1,4 @@
-import type { DeleteCommand, DeleteCommandIR } from "#src/types.js";
+import type { DeleteCommand, DeleteCommandIR } from "@chikkadb/interfaces/command/types";
 import { parseFilterDoc } from "./common/filter.js";
 
 export function parseDeleteCommand(command: DeleteCommand): DeleteCommandIR {

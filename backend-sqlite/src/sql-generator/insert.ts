@@ -1,9 +1,9 @@
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 import { ObjectId } from "bson";
-import type { InsertCommandIR, InsertCommandResult } from "../types.js";
-import { stringifyToCustomJSON } from "#src/interfaces/lib/json.js";
-import config from "#src/config.js";
+import type { InsertCommandIR, InsertCommandResult } from "@chikkadb/interfaces/command/types";
+import { stringifyToCustomJSON } from "@chikkadb/interfaces/lib/json";
+import config from "../config.js";
 
 const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 

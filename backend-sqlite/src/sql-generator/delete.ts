@@ -1,4 +1,4 @@
-import type { DeleteCommandIR, FilterNodeIR } from "../types.js";
+import type { DeleteCommandIR, FilterNodeIR } from "@chikkadb/interfaces/command/types";
 import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { logSql, logSqlResult } from "./lib/utils.js";

@@ -1,5 +1,5 @@
-import config from "#src/config.js";
-import type { ProjectionDocIR, ProjectionNodeIR } from "#src/types.js";
+import config from "../../config.js";
+import type { ProjectionDocIR, ProjectionNodeIR } from "@chikkadb/interfaces/command/types";
 
 const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 

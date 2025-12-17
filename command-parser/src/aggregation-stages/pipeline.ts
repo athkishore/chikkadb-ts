@@ -1,4 +1,4 @@
-import type { AggregationStage, AggregationStageIR } from "#src/types.js";
+import type { AggregationStage, AggregationStageIR } from "@chikkadb/interfaces/command/types";
 import { parseCountStage } from "./count.js";
 import { parseLimitStage } from "./limit.js";
 import { parseMatchStage } from "./match.js";

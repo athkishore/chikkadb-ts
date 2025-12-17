@@ -1,0 +1,1 @@
+export { generateAndExecuteSQLFromQueryIR, executeQueryIR } from './sql-generator/index.js';

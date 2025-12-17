@@ -19,6 +19,7 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "declaration": true
   },
   "include": ["src", "tests"],
 }

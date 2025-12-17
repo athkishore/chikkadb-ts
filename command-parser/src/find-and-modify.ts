@@ -1,4 +1,4 @@
-import type { FindAndModifyCommand, FindAndModifyCommandIR } from "#src/types.js";
+import type { FindAndModifyCommand, FindAndModifyCommandIR } from "@chikkadb/interfaces/command/types";
 import { parseFilterDoc } from "./common/filter.js";
 import { parseUpdateDoc } from "./common/update.js";
 

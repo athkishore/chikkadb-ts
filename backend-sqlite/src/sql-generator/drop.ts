@@ -1,4 +1,4 @@
-import type { DropCommandIR } from "#src/types.js";
+import type { DropCommandIR } from "@chikkadb/interfaces/command/types";
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 

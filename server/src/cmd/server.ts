@@ -1,6 +1,7 @@
 import { Socket, createServer } from "net";
-import { encodeMessage, processBuffer, type WireMessage } from "../lib/wire.js";
-import { getResponse } from "#command-handler/index.js";
+import { encodeMessage, processBuffer } from "../lib/wire.js";
+import { type WireMessage } from "@chikkadb/interfaces/wire/types";
+import { getResponse } from "../command-handler.js";
 import { logWireConn, logWireMsg } from "../lib/utils.js";
 import { startupOptions } from "../config.js";
 import fs from 'fs';

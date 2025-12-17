@@ -1,6 +1,14 @@
-import config from "#src/config.js";
-import { stringifyToCustomJSON } from "#src/interfaces/lib/json.js";
-import { DOC_LEVEL_FILTER_OPERATORS, FIELD_LEVEL_FILTER_OPERATORS, type FieldReference, type FilterNodeIR, type FilterNodeIR_DocLevel, type FilterNodeIR_FieldLevel, type Value } from "../../types.js";
+import config from "../../config.js";
+import { stringifyToCustomJSON } from "@chikkadb/interfaces/lib/json";
+import { 
+  DOC_LEVEL_FILTER_OPERATORS, 
+  FIELD_LEVEL_FILTER_OPERATORS, 
+  type FieldReference, 
+  type FilterNodeIR, 
+  type FilterNodeIR_DocLevel, 
+  type FilterNodeIR_FieldLevel, 
+  type Value 
+} from "@chikkadb/interfaces/command/types";
 
 export type TranslationContext = {
   conditionCTEs: string[];

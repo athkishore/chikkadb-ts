@@ -1,8 +1,8 @@
-import type { FilterNodeIR, UpdateCommandIR, UpdateNodeIR } from "../types.js";
+import type { FilterNodeIR, UpdateCommandIR, UpdateNodeIR } from "@chikkadb/interfaces/command/types";
 import type { Database } from "better-sqlite3";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { getUpdateFragment } from "./common/update.js";
-import { parseFromCustomJSON } from "#src/interfaces/lib/json.js";
+import { parseFromCustomJSON } from "@chikkadb/interfaces/lib/json";
 import { logSql, logSqlResult } from "./lib/utils.js";
 
 

@@ -1,6 +1,6 @@
-import config from "#src/config.js";
-import { stringifyToCustomJSON } from "#src/interfaces/lib/json.js";
-import type { UpdateNodeIR, Value } from "../../types.js";
+import config from "../../config.js";
+import { stringifyToCustomJSON } from "@chikkadb/interfaces/lib/json";
+import type { UpdateNodeIR, Value } from "@chikkadb/interfaces/command/types";
 
 const JSON_TYPE = config.enableJSONB ? 'jsonb' : 'json';
 

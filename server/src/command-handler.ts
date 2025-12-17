@@ -1,10 +1,11 @@
-import { executeQueryIR } from "#sql-generator/index.js";
-import { generateQueryIRFromCommand } from "#query-parser/index.js";
-import type { OpMsgPayload, OpMsgPayloadSection, WireMessage } from "#server/lib/wire.js";
-import type { CommandResponse, MQLCommand } from "#src/types.js";
+import { executeQueryIR } from "@chikkadb/backend-sqlite";
+import { generateQueryIRFromCommand } from '@chikkadb/command-parser';
+import type { OpMsgPayload, OpMsgPayloadSection, WireMessage } from "@chikkadb/interfaces/wire/types";
+import type { CommandResponse, MQLCommand } from "@chikkadb/interfaces/command/types";
 import { ObjectId } from "bson";
 import os from 'os';
 import debug from "debug";
+import { startupOptions } from "./config.js";
 
 const processId = new ObjectId();
 
@@ -351,7 +352,7 @@ export async function handleOpMsg(payload: OpMsgPayload): Promise<OpMsgPayload |
 
 
   const queryIR = generateQueryIRFromCommand(command);
-  const resultIR = executeQueryIR(queryIR);
+  const resultIR = executeQueryIR(queryIR, startupOptions.dbpath);
 
   delete resultIR['_type'];
 

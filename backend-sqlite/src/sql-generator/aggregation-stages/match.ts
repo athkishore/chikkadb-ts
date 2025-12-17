@@ -1,4 +1,4 @@
-import type { AggregationStageIR_$match } from "#src/types.js";
+import type { AggregationStageIR_$match } from "@chikkadb/interfaces/command/types";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "../common/filter.js";
 
 export function translateMatchToSQL(stage: AggregationStageIR_$match, index: number, collection: string): string {

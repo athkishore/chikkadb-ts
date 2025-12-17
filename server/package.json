@@ -9,5 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "bson": "^7.0.0",
+    "@chikkadb/interfaces": "file:../interfaces",
+    "@chikkadb/command-parser": "file:../command-parser",
+    "@chikkadb/backend-sqlite": "file:../backend-sqlite"
+  }
 }

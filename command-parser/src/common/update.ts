@@ -1,4 +1,4 @@
-import { UPDATE_OPERATORS_FIELD, type FieldReference, type UpdateNodeIR, type Value } from "../../types.js";
+import { UPDATE_OPERATORS_FIELD, type FieldReference, type UpdateNodeIR, type Value } from "@chikkadb/interfaces/command/types";
 
 export function parseUpdateDoc(updateDoc: Record<string, any>): [Error, null] | [null, UpdateNodeIR[]] {
   try {

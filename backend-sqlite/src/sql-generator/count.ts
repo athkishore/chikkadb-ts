@@ -1,6 +1,6 @@
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
-import type { CountCommandIR, FilterNodeIR } from "#src/types.js";
+import type { CountCommandIR, FilterNodeIR } from "@chikkadb/interfaces/command/types";
 import { getWhereClauseFromAugmentedFilter, traverseFilterAndTranslateCTE, type TranslationContext } from "./common/filter.js";
 import { logSql, logSqlResult } from "./lib/utils.js";
 

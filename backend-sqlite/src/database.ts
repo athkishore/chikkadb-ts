@@ -1,12 +1,8 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
-import { startupOptions } from '#src/server/config.js';
 
-const DB_PATH = startupOptions.dbpath;
-
-if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
-
-export function listDatabases() {
+export function listDatabases(DB_PATH: string) {
+  if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
   const filenames = fs.readdirSync(DB_PATH);
 
   const databaseFilenames = filenames.filter(f => /.*sqlite$/.test(f)); 
@@ -16,12 +12,13 @@ export function listDatabases() {
   return databases;
 }
 
-export function getDatabase(name: string) {
+export function getDatabase(name: string, DB_PATH: string): Database.Database {
+  if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
   const db = new Database(`${DB_PATH}/${name}.sqlite`);
   return db;
 }
 
-export function deleteDatabase(name: string): Error | 0 {
+export function deleteDatabase(name: string, DB_PATH: string): Error | 0 {
   try {
     if (fs.existsSync(`${DB_PATH}/${name}.sqlite`)) {
       fs.unlinkSync(`${DB_PATH}/${name}.sqlite`);

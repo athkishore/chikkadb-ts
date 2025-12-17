@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
-import config from "#src/config.js";
+import config from "../config.js";
 
 export function generateAndExecuteSQL_Create(command: CreateCommandIR, db: Database.Database) {
   /**

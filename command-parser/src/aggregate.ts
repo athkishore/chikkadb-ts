@@ -1,4 +1,4 @@
-import type { AggregateCommand, AggregateCommandIR } from "#src/types.js";
+import type { AggregateCommand, AggregateCommandIR } from "@chikkadb/interfaces/command/types";
 import { parsePipeline } from "./aggregation-stages/pipeline.js";
 
 export function parseAggregateCommand(command: AggregateCommand): AggregateCommandIR {

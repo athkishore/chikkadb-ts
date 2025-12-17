@@ -1,10 +1,9 @@
-import config from "../config.js";
 import { 
   type FilterNodeIR, 
   type FindCommandIR,
   type ProjectionDocIR,
   type SortNodeIR
-} from "../types.js";
+} from "@chikkadb/interfaces/command/types";
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 import { 
@@ -12,10 +11,10 @@ import {
   traverseFilterAndTranslateCTE, 
   type TranslationContext 
 } from "./common/filter.js";
-import { parseFromCustomJSON, stringifyToCustomJSON } from "#src/interfaces/lib/json.js";
+import { parseFromCustomJSON, stringifyToCustomJSON } from "@chikkadb/interfaces/lib/json";
 import { logSql, logSqlResult } from "./lib/utils.js";
 import { getSortFragment } from "./common/sort.js";
-import { getProjectionFragment } from "./common/projection.js";
+// import { getProjectionFragment } from "./common/projection.js";
 import { project } from "./user-defined-functions/projection.js";
 
 // This is a fickle implementation that can change drastically

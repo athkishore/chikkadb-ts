@@ -1,4 +1,4 @@
-import type { FieldReference, SortNodeIR } from "#src/types.js";
+import type { FieldReference, SortNodeIR } from "@chikkadb/interfaces/command/types";
 
 export function parseSortDoc(sortDoc: Record<string, 1 | -1>): [Error, null] | [null, SortNodeIR] {
   try {

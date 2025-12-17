@@ -1,4 +1,4 @@
-import type { ProjectionDoc, ProjectionDocIR, ProjectionNodeIR } from "#src/types.js";
+import type { ProjectionDoc, ProjectionDocIR, ProjectionNodeIR } from "@chikkadb/interfaces/command/types";
 
 export function parseProjectionDoc(
   projectionDoc: ProjectionDoc,

@@ -1,4 +1,4 @@
-import type { UpdateCommand, UpdateCommandIR } from "#src/types.js";
+import type { UpdateCommand, UpdateCommandIR } from "@chikkadb/interfaces/command/types";
 import { parseFilterDoc } from "./common/filter.js";
 import { parseUpdateDoc } from "./common/update.js";
 

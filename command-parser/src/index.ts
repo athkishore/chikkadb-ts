@@ -1,4 +1,4 @@
-import type { MQLCommand, CommandIR } from "#src/types.js";
+import type { MQLCommand, CommandIR } from "@chikkadb/interfaces/command/types";
 import { parseAggregateCommand } from "./aggregate.js";
 import { parseCountCommand } from "./count.js";
 import { parseDeleteCommand } from "./delete.js";

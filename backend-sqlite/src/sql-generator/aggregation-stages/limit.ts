@@ -1,4 +1,4 @@
-import type { AggregationStageIR_$limit } from "#src/types.js";
+import type { AggregationStageIR_$limit } from "@chikkadb/interfaces/command/types";
 
 export function translateLimitToSQL(stage: AggregationStageIR_$limit, index: number, collection: string) {
   const { limit } = stage;

@@ -1,7 +1,7 @@
 {
-  "name": "backend-sqlite",
+  "name": "@chikkadb/backend-sqlite",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,5 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@chikkadb/interfaces": "file:../interfaces",
+    "better-sqlite3": "^12.5.0"
+  }
 }

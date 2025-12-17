@@ -12,7 +12,7 @@ import {
   type FilterNodeIR_$ne,
   type FilterNodeIR_$nin,
   type FilterNodeIR_$nor, 
-} from "../../types.js";
+} from "@chikkadb/interfaces/command/types";
 
 
 export function parseFilterDoc(

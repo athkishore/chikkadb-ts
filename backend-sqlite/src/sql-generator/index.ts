@@ -1,9 +1,9 @@
-import type { CommandIR, QueryIR } from "../types.js";
+import type { CommandIR, QueryIR } from "@chikkadb/interfaces/command/types";
 import Database from "better-sqlite3";
 import { generateAndExecuteSQL_Create } from "./create.js";
 import { generateAndExecuteSQL_Insert } from "./insert.js";
 import { generateAndExecuteSQL_Find } from "./find.js";
-import { deleteDatabase, getDatabase, listDatabases } from "#database/index.js";
+import { deleteDatabase, getDatabase, listDatabases } from "../database.js";
 import { generateAndExecuteSQL_ListCollections } from "./list-collections.js";
 import { generateAndExecuteSQL_Count } from "./count.js";
 import { generateAndExecuteSQL_Delete } from "./delete.js";
@@ -13,7 +13,7 @@ import { logSqlExecTime } from "./lib/utils.js";
 import { generateAndExecuteSQL_Aggregate } from "./aggregate.js";
 import { generateAndExecuteSQL_Drop } from "./drop.js";
 
-export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database): any /* Add strong typing */ {
+export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Database.Database, DB_PATH: string): any /* Add strong typing */ {
   switch (commandIR.command) {
     case 'create': {
       return generateAndExecuteSQL_Create(commandIR, db);
@@ -49,7 +49,7 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
 
     case 'listDatabases': {
       return {
-        databases: listDatabases().map(d => ({ name: d })),
+        databases: listDatabases(DB_PATH).map(d => ({ name: d })),
         ok: 1,
       };
     }
@@ -76,7 +76,7 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
 
     case 'dropDatabase': {
       db.close();
-      const result = deleteDatabase(commandIR.database);
+      const result = deleteDatabase(commandIR.database, DB_PATH);
       if (result === 0) {
         return { ok: 1 };
       } else {
@@ -88,12 +88,12 @@ export function generateAndExecuteSQLFromQueryIR(commandIR: CommandIR, db: Datab
   return db.prepare('');
 }
 
-export function executeQueryIR(command: CommandIR) : any {
+export function executeQueryIR(command: CommandIR, DB_PATH: string) : any {
   try {
-    const db = getDatabase(command.database);
+    const db = getDatabase(command.database, DB_PATH);
 
     const start = Date.now();
-    const result = generateAndExecuteSQLFromQueryIR(command, db);
+    const result = generateAndExecuteSQLFromQueryIR(command, db, DB_PATH);
     const end = Date.now();
 
     logSqlExecTime(`Executed in ${end-start} ms`);

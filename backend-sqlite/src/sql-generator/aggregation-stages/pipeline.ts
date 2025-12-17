@@ -1,4 +1,4 @@
-import type { AggregationStageIR } from "#src/types.js";
+import type { AggregationStageIR } from "@chikkadb/interfaces/command/types";
 import { translateCountToSQL } from "./count.js";
 import { translateLimitToSQL } from "./limit.js";
 import { translateMatchToSQL } from "./match.js";

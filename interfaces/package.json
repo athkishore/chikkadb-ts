@@ -1,13 +1,20 @@
 {
-  "name": "interfaces",
+  "name": "@chikkadb/interfaces",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "exports": {
+    "./command/types": "./dist/command/types.js",
+    "./wire/types": "./dist/wire/types.js",
+    "./lib/json": "./dist/lib/json.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "bson": "^7.0.0"
+  }
 }

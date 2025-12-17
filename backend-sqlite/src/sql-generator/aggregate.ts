@@ -1,8 +1,8 @@
-import type { AggregateCommandIR, AggregationStageIR } from "#src/types.js";
+import type { AggregateCommandIR, AggregationStageIR } from "@chikkadb/interfaces/command/types";
 import type { Database } from "better-sqlite3";
 import { validateIdentifier } from "./utils.js";
 import { logSql, logSqlResult } from "./lib/utils.js";
-import { parseFromCustomJSON } from "#src/interfaces/lib/json.js";
+import { parseFromCustomJSON } from "@chikkadb/interfaces/lib/json";
 import { translatePipelineToSQL } from "./aggregation-stages/pipeline.js";
 
 export function generateAndExecuteSQL_Aggregate(
