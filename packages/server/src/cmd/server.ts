@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Socket, createServer } from "net";
 import { encodeMessage, processBuffer } from "../lib/wire.js";
 import { type WireMessage } from "@chikkadb/interfaces/wire/types";

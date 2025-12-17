@@ -9,6 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "node dist/cmd/server.js"
   },
+  "bin": {
+    "server": "dist/cmd/server.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
