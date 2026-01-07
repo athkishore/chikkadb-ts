@@ -6,12 +6,14 @@ import { logSql, logSqlResult } from "./lib/utils.js";
 function translateCommandToSQL({
   collection,
   filterIR,
+  limit,
 }: {
   collection: string;
   filterIR: FilterNodeIR;
+  limit: number | undefined;
 }) {
   if (filterIR.operator === '$and' && filterIR.operands.length === 0) {
-    return `DELETE FROM ${collection} AS c`;
+    return `DELETE FROM ${collection} AS c ${limit ? `LIMIT ${limit}` : ''}`;
   }
 
   const context: TranslationContext = {
@@ -40,6 +42,7 @@ WHERE EXISTS (
   }).join('\n')}
   WHERE
     ${whereFragment}
+  ${limit ? `LIMIT ${limit}` : ''}
 )
 `;
 
@@ -53,9 +56,10 @@ export function generateAndExecuteSQL_Delete(command: DeleteCommandIR, db: Datab
   // validate and sanitize inputs
 
   const filterIR = deletes[0]?.filter;
+  const limit = deletes[0]?.limit;
   if (!filterIR) throw new Error('Missing filter for delete');
 
-  const sql = translateCommandToSQL({ collection, filterIR });
+  const sql = translateCommandToSQL({ collection, filterIR, limit });
 
   logSql(sql);
 
