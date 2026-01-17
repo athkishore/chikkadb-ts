@@ -325,6 +325,7 @@ export const UPDATE_OPERATORS_FIELD = [
   '$mul',
   '$max',
   '$min',
+  '$push',
 ] as const;
 
 export type SortNodeIR = {
@@ -348,7 +349,8 @@ export type UpdateNodeIR =
   | UpdateNodeIR_$inc
   | UpdateNodeIR_$mul
   | UpdateNodeIR_$max
-  | UpdateNodeIR_$min;
+  | UpdateNodeIR_$min
+  | UpdateNodeIR_$push;
 
 export type UpdateNodeIR_$set = {
   operator: '$set';
@@ -379,6 +381,11 @@ export type UpdateNodeIR_$min = {
   operator: '$min';
   operandsArr: [FieldReference, Value][];
 };
+
+export type UpdateNodeIR_$push = {
+  operator: '$push';
+  operandsArr: [FieldReference, { value: Value; /*each?: boolean; position*/ }][];
+}
 
 export type CommandIR = 
   | FindCommandIR
